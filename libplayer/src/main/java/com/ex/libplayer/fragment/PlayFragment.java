@@ -71,6 +71,8 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
 
     private String title = "";
     private String url = "";
+    private boolean showButtonFullScreen = true;
+    private boolean showControlViewWhenInit = true;
     private OnPlayListener onPlayListener;
 
     public PlayFragment() {
@@ -149,6 +151,8 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
     private void initControlView(View view) {
         controlTopView = view.findViewById(R.id.control_top_view);
         controlBottomView = view.findViewById(R.id.control_bottom_view);
+        controlTopView.setVisibility(showControlViewWhenInit? View.VISIBLE: View.GONE);
+        controlBottomView.setVisibility(showControlViewWhenInit? View.VISIBLE: View.GONE);
         tapView = view.findViewById(R.id.tap_view);
         tvTitle = view.findViewById(R.id.tv_title);
         tvTitle.setText(title);
@@ -157,6 +161,7 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
         tvCurrentTime = view.findViewById(R.id.tv_current_time);
         tvTotalTime = view.findViewById(R.id.tv_total_time);
         ibtFullScreen = view.findViewById(R.id.ibt_full_screen);
+        ibtFullScreen.setVisibility(showButtonFullScreen? View.VISIBLE: View.GONE);
 
         loadingView = view.findViewById(R.id.loading_view);
         pbLoading = view.findViewById(R.id.pb_loading);
@@ -182,13 +187,9 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
                             startTimer();
                         }
                     }else if (diff > 30){
-                        if(player != null && player.isPlaying()){
-                            player.forward(1000 * 15);
-                        }
+                        forward();
                     }else if (diff < -30){
-                        if(player != null && player.isPlaying()){
-                            player.rewind(1000 * 15);
-                        }
+                        rewind();
                     }
                     break;
                 default:
@@ -246,10 +247,10 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
     public void onClick(View v) {
         if(v.getId() ==  R.id.tap_view) {
             if (controlTopView.getVisibility() == View.VISIBLE) {
-                handler.sendEmptyMessage(MSG_HIDE_CONTROL_VIEW);
+                hideControlView();
                 cancelTimer();
             } else {
-                handler.sendEmptyMessage(MSG_SHOW_CONTROL_VIEW);
+                showControlView();
                 startTimer();
             }
         }else if(v.getId() == R.id.ibt_play) {
@@ -265,6 +266,14 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
         }else if(v.getId() == R.id.ibt_full_screen) {
             startTimer();
         }
+    }
+
+    private void hideControlView() {
+        handler.sendEmptyMessage(MSG_HIDE_CONTROL_VIEW);
+    }
+
+    private void showControlView() {
+        handler.sendEmptyMessage(MSG_SHOW_CONTROL_VIEW);
     }
 
     @Override
@@ -345,7 +354,7 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
     }
 
     // 点击屏幕显示控制器后自动隐藏的timer
-    private void startTimer(){
+    public void startTimer(){
         cancelTimer();
         timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -357,7 +366,7 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
         }, 1000L * 15);
     }
 
-    private void cancelTimer(){
+    public void cancelTimer(){
         if(timer != null){
             timer.cancel();
             timer = null;
@@ -365,7 +374,7 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
     }
 
     // 每500毫秒更新一次播放信息的timer
-    private void startStatusTimer(){
+    public void startStatusTimer(){
         cancelStatusTimer();
         statusTimer = new Timer();
         statusTimer.schedule(new TimerTask() {
@@ -377,12 +386,42 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
         }, 10L, 500L);
     }
 
-    private void cancelStatusTimer(){
+    public void cancelStatusTimer(){
         if(statusTimer != null){
             statusTimer.cancel();
             statusTimer = null;
         }
     }
 
+    public void setControlViewVisibilityWhenInit(boolean visibility){
+        showControlViewWhenInit = visibility;
+    }
 
+    public void setButtonFullScreenVisibility(boolean visibility){
+        if(ibtFullScreen != null) {
+            ibtFullScreen.setVisibility(visibility ? View.VISIBLE : View.GONE);
+        }else{
+            showButtonFullScreen = visibility;
+        }
+    }
+
+    public void forward(){
+        forward(15);
+    }
+
+    public void forward(int second){
+        if(player != null && player.isPlaying()){
+            player.forward(1000 * second);
+        }
+    }
+
+    public void rewind(){
+        rewind(15);
+    }
+
+    public void rewind(int second){
+        if(player != null && player.isPlaying()){
+            player.rewind(1000 * second);
+        }
+    }
 }
