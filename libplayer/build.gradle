@@ -35,7 +35,6 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
-    implementation (name:'libvlc-armv7-3.2.1', ext: 'aar')
 }
 
 
@@ -47,14 +46,35 @@ publish {
     userOrg = 'patrickxu'
     groupId = 'com.ex.lib'
     artifactId = 'explayer'
-    publishVersion = '1.0.0'
+    publishVersion = '1.0.1'
     desc = 'play component for android'
     website = 'https://github.com/wiatec/ExPlayer'
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 // 上传命令
 // ./gradlew clean build bintrayUpload -PbintrayUser=patrickxu -PbintrayKey=89a105cd2d333581a29470d5e2b9e5f774b7bb59 -PdryRun=false
 
-// https://jcenter.bintray.com/com/ex/lib/
+// 项目仓库位置 https://jcenter.bintray.com/com/ex/lib/explayer/
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+/////////////////////////////、////////  其它项目引用说明   ///////////////////////////////////////////
+
+//  引用  implementation 'com.ex.lib:explayer:1.0.1'
+
+//  修改需要引入的模块的build.gradle文件
+//  defaultConfig 标签内增加
+//     ndk {
+//         abiFilters "armeabi-v7a"
+//     }
+
+//  android 标签内增加
+//     compileOptions {
+//         sourceCompatibility JavaVersion.VERSION_1_8
+//         targetCompatibility JavaVersion.VERSION_1_8
+//     }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////

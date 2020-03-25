@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initFragment(){
-        playFragment = new PlayFragment(Player.ENGINE_NATIVE);
+        playFragment = new PlayFragment(Player.ENGINE_VLC);
         playFragment.setUrl(URL);
         playFragment.setTitle("JW");
         playFragment.setButtonFullScreenVisibility(false);

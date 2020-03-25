@@ -23,7 +23,7 @@ allprojects {
         jcenter()
         flatDir {
             dirs 'libs'
-            dirs project(':libplayer').file('libs')
+//            dirs project(':libplayer').file('libs')
         }
     }
     tasks.withType(Javadoc){
