@@ -39,17 +39,22 @@ dependencies {
 }
 
 
-// 上传到jcenter配置
+////////////////////////////////////// 上传到jcenter配置  ///////////////////////////////////////////
+
 apply plugin: 'com.novoda.bintray-release'
 
 publish {
     userOrg = 'patrickxu'
-    groupId = 'com.ex'
-    artifactId = 'ExPlayer'
+    groupId = 'com.ex.lib'
+    artifactId = 'explayer'
     publishVersion = '1.0.0'
     desc = 'play component for android'
     website = 'https://github.com/wiatec/ExPlayer'
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // 上传命令
 // ./gradlew clean build bintrayUpload -PbintrayUser=patrickxu -PbintrayKey=89a105cd2d333581a29470d5e2b9e5f774b7bb59 -PdryRun=false
+
+// https://jcenter.bintray.com/com/ex/lib/

@@ -2,12 +2,12 @@ package com.ex.libplayer.engine;
 
 import android.content.Context;
 import android.media.MediaPlayer;
-import android.media.MediaTimestamp;
 import android.net.Uri;
 import android.util.Log;
+import android.view.Surface;
 import android.view.SurfaceView;
+import android.view.TextureView;
 
-import androidx.annotation.NonNull;
 
 import com.ex.libplayer.Constant;
 import com.ex.libplayer.listener.OnPlayListener;
@@ -48,6 +48,7 @@ public class EngineNative implements Engine{
                 if(onPlayListener != null){
                     onPlayListener.onPlayerPrepared();
                     onPlayListener.onPlayerPlaying();
+
                 }
             }
         });
@@ -97,6 +98,7 @@ public class EngineNative implements Engine{
         if(player == null) return;
         Log.d(Constant.c.TAG, "start play url: " + url);
         try {
+            player.reset();
             player.setDataSource(context, Uri.parse(url), headers);
             player.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT);
             player.prepareAsync();
@@ -109,10 +111,10 @@ public class EngineNative implements Engine{
     public void restart() {
         if(player == null) return;
         Log.d(Constant.c.TAG, "restart play url: " + url);
-        player.reset();
         try {
+            player.reset();
             player.setDataSource(context, Uri.parse(url), headers);
-            player.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
+            player.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT);
             player.prepareAsync();
         }catch (Exception e){
             Log.e(Constant.c.TAG, e.toString());

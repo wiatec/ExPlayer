@@ -25,7 +25,7 @@ import androidx.fragment.app.Fragment;
 import com.ex.libplayer.Constant;
 import com.ex.libplayer.R;
 import com.ex.libplayer.listener.OnPlayListener;
-import com.ex.libplayer.player.DefaultPlayer;
+import com.ex.libplayer.player.ExPlayer;
 import com.ex.libplayer.player.Player;
 
 import java.util.Timer;
@@ -76,7 +76,7 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
     private OnPlayListener onPlayListener;
 
     public PlayFragment() {
-        this(Player.ENGINE_VLC);
+        this(Player.ENGINE_NATIVE);
     }
 
     public PlayFragment(int engine) {
@@ -92,7 +92,7 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
     }
 
     private void initPlayer(){
-        player = new DefaultPlayer();
+        player = new ExPlayer();
         player.init(context, engine);
         player.setUrl(url);
         player.setListener(this);
@@ -199,26 +199,28 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
         });
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        if(player != null) {
-            player.resume();
-        }
-    }
+//    @Override
+//    public void onResume() {
+//        super.onResume();
+//        Log.d(Constant.c.TAG, "onResume");
+//        if(player != null) {
+//            player.resume();
+//        }
+//    }
 
     @Override
     public void onPause() {
         super.onPause();
+        Log.d(Constant.c.TAG, "onPause");
         if(player != null) {
             player.pause();
         }
     }
 
-
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d(Constant.c.TAG, "onDestroy");
         if(player != null) {
             player.stop();
             player.release();
@@ -235,12 +237,10 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-
     }
 
     @Override
@@ -338,21 +338,6 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
         handler.sendEmptyMessage(MSG_PLAY_ERROR);
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-        if(tvTitle != null && !TextUtils.isEmpty(title)) {
-            tvTitle.setText(title);
-        }
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public void setOnPlayListener(OnPlayListener onPlayListener) {
-        this.onPlayListener = onPlayListener;
-    }
-
     // 点击屏幕显示控制器后自动隐藏的timer
     public void startTimer(){
         cancelTimer();
@@ -393,6 +378,17 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
         }
     }
 
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+        if(tvTitle != null && !TextUtils.isEmpty(title)) {
+            tvTitle.setText(title);
+        }
+    }
+
     public void setControlViewVisibilityWhenInit(boolean visibility){
         showControlViewWhenInit = visibility;
     }
@@ -403,6 +399,10 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
         }else{
             showButtonFullScreen = visibility;
         }
+    }
+
+    public void setOnPlayListener(OnPlayListener onPlayListener) {
+        this.onPlayListener = onPlayListener;
     }
 
     public void forward(){

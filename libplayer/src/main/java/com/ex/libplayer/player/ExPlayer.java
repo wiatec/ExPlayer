@@ -2,7 +2,9 @@ package com.ex.libplayer.player;
 
 import android.content.Context;
 import android.util.Log;
+import android.view.Surface;
 import android.view.SurfaceView;
+import android.view.TextureView;
 
 import com.ex.libplayer.Constant;
 import com.ex.libplayer.engine.Engine;
@@ -13,7 +15,7 @@ import com.ex.libplayer.util.TimeUtils;
 
 import java.util.Map;
 
-public class DefaultPlayer implements Player {
+public class ExPlayer implements Player {
 
     private Engine mEngine;
 
@@ -178,4 +180,5 @@ public class DefaultPlayer implements Player {
     public boolean isPlaying() {
         return mEngine != null && mEngine.isPlaying();
     }
+
 }

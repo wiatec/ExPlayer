@@ -34,7 +34,7 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
 
     @Override
     public void setDisplay(SurfaceView surfaceView) {
-        vlcPlayer.getVLCVout().setVideoSurface(surfaceView.getHolder().getSurface(), surfaceView.getHolder());
+        vlcPlayer.getVLCVout().setVideoView(surfaceView);
         vlcPlayer.getVLCVout().attachViews();
         vlcPlayer.getVLCVout().setWindowSize(surfaceView.getWidth(), surfaceView.getHeight());
     }
@@ -163,9 +163,10 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
         return vlcPlayer != null && vlcPlayer.isPlaying();
     }
 
+
     @Override
     public void onEvent(MediaPlayer.Event event) {
-        Log.d(Constant.c.TAG, event.type + "");
+//        Log.d(Constant.c.TAG, event.type + "");
         switch (event.type){
             case MediaPlayer.Event.Playing:
                 if(onPlayListener != null){
