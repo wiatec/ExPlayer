@@ -18,7 +18,7 @@ import java.util.Map;
 public class EngineVlc implements Engine, MediaPlayer.EventListener {
 
     private LibVLC libVLC;
-    private MediaPlayer vlcPlayer;
+    private MediaPlayer player;
     private String url;
     private OnPlayListener onPlayListener;
     private Map<String, String> headers;
@@ -28,8 +28,8 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
         headers = new HashMap<>();
         headers.put("User-Agent", Constant.header.USER_AGENT);
         libVLC = new LibVLC(context);
-        vlcPlayer = new MediaPlayer(libVLC);
-        vlcPlayer.setEventListener(this);
+        player = new MediaPlayer(libVLC);
+        player.setEventListener(this);
     }
 
     @Override
@@ -39,9 +39,9 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
 
     @Override
     public void setDisplay(SurfaceView surfaceView) {
-        vlcPlayer.getVLCVout().setVideoView(surfaceView);
-        vlcPlayer.getVLCVout().attachViews();
-        vlcPlayer.getVLCVout().setWindowSize(surfaceView.getWidth(), surfaceView.getHeight());
+        player.getVLCVout().setVideoView(surfaceView);
+        player.getVLCVout().attachViews();
+        player.getVLCVout().setWindowSize(surfaceView.getWidth(), surfaceView.getHeight());
     }
 
     @Override
@@ -57,56 +57,57 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
 
     @Override
     public void start() {
-        if(vlcPlayer == null) return;
+        if(player == null) return;
         Log.d(Constant.c.TAG, "start play url: " + url);
         Media media = new Media(libVLC, Uri.parse(url));
         media.addOption("--network-caching=300");
-        vlcPlayer.setMedia(media);
-        vlcPlayer.play();
+        player.setMedia(media);
+        player.play();
     }
 
     @Override
     public void restart() {
-        if(vlcPlayer == null) return;
+        if(player == null) return;
         Log.d(Constant.c.TAG, "restart play url: " + url);
         Media media = new Media(libVLC, Uri.parse(url));
         media.addOption("--network-caching=300");
-        vlcPlayer.setMedia(media);
-        vlcPlayer.play();
+        player.setMedia(media);
+        player.play();
     }
 
     @Override
     public void resume() {
-        if(vlcPlayer != null){
-            vlcPlayer.play();
+        if(player != null){
+            player.play();
         }
     }
 
     @Override
     public void pause() {
-        if(vlcPlayer != null){
-            vlcPlayer.pause();
+        if(player != null){
+            player.pause();
         }
     }
 
     @Override
     public void stop() {
-        if(vlcPlayer != null){
-            vlcPlayer.stop();
+        if(player != null){
+            player.stop();
         }
     }
 
     @Override
     public void release() {
-        if(vlcPlayer != null){
-            vlcPlayer.release();
+        if(player != null){
+            player.release();
+            player = null;
         }
     }
 
     @Override
     public void seekTo(float duration) {
-        if(vlcPlayer != null){
-            vlcPlayer.setTime((long) duration);
+        if(player != null && getTotalDuration() > 0){
+            player.setTime((long) duration);
         }
     }
 
@@ -133,8 +134,8 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
 
     @Override
     public float getCurrentDuration() {
-        if(vlcPlayer != null){
-            return vlcPlayer.getTime();
+        if(player != null){
+            return player.getTime();
         }
         return 0f;
     }
@@ -146,22 +147,22 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
 
     @Override
     public float getTotalDuration() {
-        if(vlcPlayer != null){
-            return vlcPlayer.getLength();
+        if(player != null){
+            return player.getLength();
         }
         return 0f;
     }
 
     @Override
     public void setVolume(float volume) {
-        if(vlcPlayer != null){
-            vlcPlayer.setVolume((int) volume);
+        if(player != null){
+            player.setVolume((int) volume);
         }
     }
 
     @Override
     public boolean isPlaying() {
-        return vlcPlayer != null && vlcPlayer.isPlaying();
+        return player != null && player.isPlaying();
     }
 
 

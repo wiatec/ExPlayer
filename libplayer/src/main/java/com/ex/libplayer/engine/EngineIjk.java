@@ -157,12 +157,13 @@ public class EngineIjk implements Engine{
         if(player != null){
             player.stop();
             player.release();
+            player = null;
         }
     }
 
     @Override
     public void seekTo(float duration) {
-        if(player != null){
+        if(player != null && getTotalDuration() > 0){
             player.seekTo((int)duration);
         }
     }

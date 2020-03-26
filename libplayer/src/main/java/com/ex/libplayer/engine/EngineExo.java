@@ -182,7 +182,7 @@ public class EngineExo implements Engine{
 
     @Override
     public void seekTo(float duration) {
-        if(player != null){
+        if(player != null && getTotalDuration() > 0){
             player.seekTo((int)duration);
         }
     }

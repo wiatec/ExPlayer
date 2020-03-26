@@ -162,12 +162,13 @@ public class EngineNative implements Engine{
         if(player != null){
             player.stop();
             player.release();
+            player = null;
         }
     }
 
     @Override
     public void seekTo(float duration) {
-        if(player != null){
+        if(player != null && getTotalDuration() > 0){
             player.seekTo((int)duration);
         }
     }
@@ -195,7 +196,7 @@ public class EngineNative implements Engine{
 
     @Override
     public float getCurrentDuration() {
-        if(player != null && player.isPlaying()){
+        if(player != null){
             return player.getCurrentPosition();
         }
         return 0f;
@@ -208,7 +209,7 @@ public class EngineNative implements Engine{
 
     @Override
     public float getTotalDuration() {
-        if(player != null && player.isPlaying()){
+        if(player != null){
             return player.getDuration();
         }
         return 0f;

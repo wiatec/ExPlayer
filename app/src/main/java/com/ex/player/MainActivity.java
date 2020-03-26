@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initFragment(){
-        playFragment = new PlayFragment(Player.ENGINE_EXO);
+        playFragment = new PlayFragment(Player.ENGINE_NATIVE);
         playFragment.setUrl(URL);
         playFragment.setTitle("JW");
         playFragment.setButtonFullScreenVisibility(false);
