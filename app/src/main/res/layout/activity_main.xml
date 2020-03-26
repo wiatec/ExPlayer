@@ -12,4 +12,12 @@
         android:layout_width="match_parent"
         android:layout_height="240dp" />
 
+    <Button
+        android:id="@+id/bt_next"
+        android:text="Next"
+        android:layout_gravity="bottom"
+        android:layout_margin="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
 </FrameLayout>

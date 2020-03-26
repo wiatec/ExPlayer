@@ -19,6 +19,7 @@ public class EngineIjk implements Engine{
 
     private Context context;
     private IjkMediaPlayer player;
+    private SurfaceView surfaceView;
     private String url;
     private OnPlayListener onPlayListener;
     private Map<String, String> headers;
@@ -44,6 +45,7 @@ public class EngineIjk implements Engine{
 
     @Override
     public void setDisplay(SurfaceView surfaceView) {
+        this.surfaceView = surfaceView;
         player.setDisplay(surfaceView.getHolder());
     }
 
@@ -53,6 +55,7 @@ public class EngineIjk implements Engine{
         player.setOnPreparedListener(iMediaPlayer -> {
             iMediaPlayer.start();
             if(onPlayListener != null){
+                onPlayListener.onPlayerSizeChanged(iMediaPlayer.getVideoWidth(), iMediaPlayer.getVideoHeight());
                 onPlayListener.onPlayerPrepared();
                 onPlayListener.onPlayerPlaying();
 
@@ -104,7 +107,6 @@ public class EngineIjk implements Engine{
         if(player == null) return;
         Log.d(Constant.c.TAG, "start play url: " + url);
         try {
-            player.reset();
             player.setDataSource(context, Uri.parse(url), headers);
             player.prepareAsync();
         }catch (Exception e){
@@ -118,6 +120,7 @@ public class EngineIjk implements Engine{
         Log.d(Constant.c.TAG, "restart play url: " + url);
         try {
             player.reset();
+            player.setDisplay(surfaceView.getHolder());
             player.setDataSource(context, Uri.parse(url), headers);
             player.prepareAsync();
         }catch (Exception e){

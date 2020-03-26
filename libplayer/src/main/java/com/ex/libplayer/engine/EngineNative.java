@@ -18,6 +18,7 @@ import java.util.Map;
 public class EngineNative implements Engine{
 
     private Context context;
+    private SurfaceView surfaceView;
     private MediaPlayer player;
     private String url;
     private OnPlayListener onPlayListener;
@@ -40,6 +41,7 @@ public class EngineNative implements Engine{
 
     @Override
     public void setDisplay(SurfaceView surfaceView) {
+        this.surfaceView = surfaceView;
         player.setDisplay(surfaceView.getHolder());
     }
 
@@ -51,6 +53,7 @@ public class EngineNative implements Engine{
             public void onPrepared(MediaPlayer mp) {
                 mp.start();
                 if(onPlayListener != null){
+                    onPlayListener.onPlayerSizeChanged(mp.getVideoWidth(), mp.getVideoHeight());
                     onPlayListener.onPlayerPrepared();
                     onPlayListener.onPlayerPlaying();
 
@@ -102,28 +105,32 @@ public class EngineNative implements Engine{
     public void start() {
         if(player == null) return;
         Log.d(Constant.c.TAG, "start play url: " + url);
-        try {
-            player.reset();
-            player.setDataSource(context, Uri.parse(url), headers);
-            player.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT);
-            player.prepareAsync();
-        }catch (Exception e){
-            Log.e(Constant.c.TAG, e.toString());
-        }
+        new Thread(() -> {
+            try {
+                player.setDataSource(context, Uri.parse(url), headers);
+                player.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT);
+                player.prepareAsync();
+            }catch (Exception e){
+                Log.e(Constant.c.TAG, e.toString());
+            }
+        }).start();
     }
 
     @Override
     public void restart() {
         if(player == null) return;
         Log.d(Constant.c.TAG, "restart play url: " + url);
-        try {
-            player.reset();
-            player.setDataSource(context, Uri.parse(url), headers);
-            player.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT);
-            player.prepareAsync();
-        }catch (Exception e){
-            Log.e(Constant.c.TAG, e.toString());
-        }
+        new Thread(() -> {
+            try {
+                player.reset();
+                player.setDisplay(surfaceView.getHolder());
+                player.setDataSource(context, Uri.parse(url), headers);
+                player.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT);
+                player.prepareAsync();
+            }catch (Exception e){
+                Log.e(Constant.c.TAG, e.toString());
+            }
+        }).start();
     }
 
     @Override
@@ -188,7 +195,7 @@ public class EngineNative implements Engine{
 
     @Override
     public float getCurrentDuration() {
-        if(player != null){
+        if(player != null && player.isPlaying()){
             return player.getCurrentPosition();
         }
         return 0f;
@@ -201,7 +208,7 @@ public class EngineNative implements Engine{
 
     @Override
     public float getTotalDuration() {
-        if(player != null){
+        if(player != null && player.isPlaying()){
             return player.getDuration();
         }
         return 0f;

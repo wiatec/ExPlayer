@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -30,6 +31,7 @@ import com.ex.libplayer.player.Player;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Logger;
 
 public class PlayFragment extends Fragment implements SurfaceHolder.Callback, OnPlayListener, View.OnClickListener {
 
@@ -266,6 +268,22 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
     }
 
     @Override
+    public void onPlayerSizeChanged(int videoWidth, int videoHeight) {
+        Log.d(Constant.c.TAG, "onPlayerSizeChanged");
+        if(surfaceView != null && videoWidth > 0 && videoHeight > 0) {
+            int width = surfaceView.getWidth();
+            float rate = Float.parseFloat(videoHeight+"") / Float.parseFloat(videoWidth + "");
+            float height = width * rate;
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(width, (int)height);
+            layoutParams.gravity = Gravity.CENTER;
+            surfaceView.setLayoutParams(layoutParams);
+        }
+        if(onPlayListener != null){
+            onPlayListener.onPlayerSizeChanged(videoWidth, videoHeight);
+        }
+    }
+
+    @Override
     public void onPlayerPrepared() {
         Log.d(Constant.c.TAG, "onPlayerPrepared");
         if(onPlayListener != null){
@@ -279,6 +297,7 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
         if(onPlayListener != null){
             onPlayListener.onPlayerPlaying();
         }
+        handler.sendEmptyMessage(MSG_SHOW_CONTROL_VIEW);
         handler.sendEmptyMessage(MSG_HIDE_LOADING_VIEW);
         handler.sendEmptyMessage(MSG_SET_ICON_PAUSE);
         startTimer();
@@ -392,6 +411,13 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
 
     public void setOnPlayListener(OnPlayListener onPlayListener) {
         this.onPlayListener = onPlayListener;
+    }
+
+    public void restart(){
+        if(player != null){
+            handler.sendEmptyMessage(MSG_SHOW_CONTROL_VIEW);
+            player.restart();
+        }
     }
 
     public void forward(){

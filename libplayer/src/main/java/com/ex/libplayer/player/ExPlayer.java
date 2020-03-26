@@ -8,6 +8,7 @@ import android.view.TextureView;
 
 import com.ex.libplayer.Constant;
 import com.ex.libplayer.engine.Engine;
+import com.ex.libplayer.engine.EngineExo;
 import com.ex.libplayer.engine.EngineIjk;
 import com.ex.libplayer.engine.EngineNative;
 import com.ex.libplayer.engine.EngineVlc;
@@ -36,7 +37,8 @@ public class ExPlayer implements Player {
             mEngine.init(context);
         }else if(engine == Player.ENGINE_EXO){
             Log.d(Constant.c.TAG, "init exo engine");
-            // TODO
+            mEngine = new EngineExo();
+            mEngine.init(context);
         }
     }
 
