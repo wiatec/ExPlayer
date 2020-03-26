@@ -33,6 +33,11 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
     }
 
     @Override
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    @Override
     public void setDisplay(SurfaceView surfaceView) {
         vlcPlayer.getVLCVout().setVideoView(surfaceView);
         vlcPlayer.getVLCVout().attachViews();
@@ -40,9 +45,15 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
     }
 
     @Override
-    public void setUrl(String url) {
-        this.url = url;
+    public void setListener(OnPlayListener onPlayListener) {
+        this.onPlayListener = onPlayListener;
     }
+
+    @Override
+    public void setHeaders(Map<String, String> headers) {
+        this.headers.putAll(headers);
+    }
+
 
     @Override
     public void start() {
@@ -139,16 +150,6 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
             return vlcPlayer.getLength();
         }
         return 0f;
-    }
-
-    @Override
-    public void setListener(OnPlayListener onPlayListener) {
-        this.onPlayListener = onPlayListener;
-    }
-
-    @Override
-    public void setHeaders(Map<String, String> headers) {
-        this.headers.putAll(headers);
     }
 
     @Override

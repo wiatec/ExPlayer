@@ -13,9 +13,10 @@ public interface Engine {
 
     void init(Context context);
 
-    void setDisplay(SurfaceView surfaceView);
-
     void setUrl(String url);
+    void setDisplay(SurfaceView surfaceView);
+    void setListener(OnPlayListener onPlayListener);
+    void setHeaders(Map<String, String> headers);
 
     void start();
     void restart();
@@ -31,8 +32,6 @@ public interface Engine {
     float getPlayableDuration();
     float getTotalDuration();
 
-    void setListener(OnPlayListener onPlayListener);
-    void setHeaders(Map<String, String> headers);
     void setVolume(float volume);
     boolean isPlaying();
 }

@@ -39,6 +39,11 @@ public class EngineNative implements Engine{
     }
 
     @Override
+    public void setDisplay(SurfaceView surfaceView) {
+        player.setDisplay(surfaceView.getHolder());
+    }
+
+    @Override
     public void setListener(OnPlayListener onPlayListener) {
         this.onPlayListener = onPlayListener;
         player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -89,8 +94,8 @@ public class EngineNative implements Engine{
     }
 
     @Override
-    public void setDisplay(SurfaceView surfaceView) {
-        player.setDisplay(surfaceView.getHolder());
+    public void setHeaders(Map<String, String> headers) {
+        this.headers.putAll(headers);
     }
 
     @Override
@@ -200,11 +205,6 @@ public class EngineNative implements Engine{
             return player.getDuration();
         }
         return 0f;
-    }
-
-    @Override
-    public void setHeaders(Map<String, String> headers) {
-        this.headers.putAll(headers);
     }
 
     @Override

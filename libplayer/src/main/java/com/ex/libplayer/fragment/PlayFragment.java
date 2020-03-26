@@ -199,19 +199,9 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
         });
     }
 
-//    @Override
-//    public void onResume() {
-//        super.onResume();
-//        Log.d(Constant.c.TAG, "onResume");
-//        if(player != null) {
-//            player.resume();
-//        }
-//    }
-
     @Override
     public void onPause() {
         super.onPause();
-        Log.d(Constant.c.TAG, "onPause");
         if(player != null) {
             player.pause();
         }
@@ -220,7 +210,6 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback, On
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(Constant.c.TAG, "onDestroy");
         if(player != null) {
             player.stop();
             player.release();
