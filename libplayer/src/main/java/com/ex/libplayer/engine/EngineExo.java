@@ -2,8 +2,10 @@ package com.ex.libplayer.engine;
 
 import android.content.Context;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
-import android.view.SurfaceView;
+import android.view.Surface;
+import android.view.TextureView;
 
 import com.ex.libplayer.Constant;
 import com.ex.libplayer.listener.OnPlayListener;
@@ -23,7 +25,6 @@ import java.util.Map;
 public class EngineExo implements Engine{
 
     private Context context;
-    private SurfaceView surfaceView;
     private SimpleExoPlayer player;
     private String url;
     private OnPlayListener onPlayListener;
@@ -45,9 +46,8 @@ public class EngineExo implements Engine{
     }
 
     @Override
-    public void setDisplay(SurfaceView surfaceView) {
-        this.surfaceView = surfaceView;
-        player.setVideoSurfaceView(surfaceView);
+    public void setDisplay(Surface surface, TextureView textureView) {
+        player.setVideoSurface(surface);
     }
 
     @Override
@@ -61,17 +61,17 @@ public class EngineExo implements Engine{
                 }else if(playbackState == com.google.android.exoplayer2.ExoPlayer.STATE_BUFFERING){
                     isPlaying = false;
                     if(onPlayListener != null){
-                        onPlayListener.onPlayerBuffering();
+                        onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_BUFFERING);
                     }
                 }else if(playbackState == com.google.android.exoplayer2.ExoPlayer.STATE_READY){
                     isPlaying = playWhenReady;
                     if(onPlayListener != null && playWhenReady){
-                        onPlayListener.onPlayerPlaying();
+                        onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_PLAYING);
                     }
                 }else if(playbackState == com.google.android.exoplayer2.ExoPlayer.STATE_ENDED){
                     isPlaying = false;
                     if(onPlayListener != null){
-                        onPlayListener.onPlayerCompleted();
+                        onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_COMPLETED);
                     }
                 }
             }
@@ -80,7 +80,7 @@ public class EngineExo implements Engine{
             public void onPlayerError(ExoPlaybackException error) {
                 isPlaying = false;
                 if(onPlayListener != null){
-                    onPlayListener.onPlayerError();
+                    onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_ERROR);
                 }
             }
         });
@@ -96,7 +96,7 @@ public class EngineExo implements Engine{
             public void onRenderedFirstFrame() {
                 isPlaying = true;
                 if (onPlayListener != null) {
-                    onPlayListener.onPlayerPrepared();
+                    onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_PREPARED);
                 }
             }
         });
@@ -109,8 +109,11 @@ public class EngineExo implements Engine{
 
     @Override
     public void start() {
-        if(player == null) return;
+        if(player == null || TextUtils.isEmpty(url)) return;
         Log.d(Constant.c.TAG, "start play url: " + url);
+        if(onPlayListener != null){
+            onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_PREPARING);
+        }
         try {
             player.stop(true);
             DefaultHttpDataSourceFactory dataSourceFactory = new
@@ -129,8 +132,11 @@ public class EngineExo implements Engine{
 
     @Override
     public void restart() {
-        if(player == null) return;
+        if(player == null || TextUtils.isEmpty(url)) return;
         Log.d(Constant.c.TAG, "restart play url: " + url);
+        if(onPlayListener != null){
+            onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_PREPARING);
+        }
         try {
             player.stop(true);
             DefaultHttpDataSourceFactory dataSourceFactory = new
@@ -159,7 +165,7 @@ public class EngineExo implements Engine{
         if(player != null){
             player.setPlayWhenReady(false);
             if(onPlayListener != null){
-                onPlayListener.onPlayerPause();
+                onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_PAUSED);
             }
         }
     }

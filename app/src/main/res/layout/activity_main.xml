@@ -6,11 +6,11 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <FrameLayout
-        android:id="@+id/frame_layout"
+    <com.ex.libplayer.view.ExPlayView
+        android:id="@+id/ex_play_view"
         android:background="@android:color/black"
         android:layout_width="match_parent"
-        android:layout_height="240dp" />
+        android:layout_height="220dp" />
 
     <Button
         android:id="@+id/bt_next"

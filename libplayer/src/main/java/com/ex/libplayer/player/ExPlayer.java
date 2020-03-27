@@ -3,7 +3,6 @@ package com.ex.libplayer.player;
 import android.content.Context;
 import android.util.Log;
 import android.view.Surface;
-import android.view.SurfaceView;
 import android.view.TextureView;
 
 import com.ex.libplayer.Constant;
@@ -13,7 +12,7 @@ import com.ex.libplayer.engine.EngineIjk;
 import com.ex.libplayer.engine.EngineNative;
 import com.ex.libplayer.engine.EngineVlc;
 import com.ex.libplayer.listener.OnPlayListener;
-import com.ex.libplayer.util.TimeUtils;
+import com.ex.libplayer.util.ExUtils;
 
 import java.util.Map;
 
@@ -57,9 +56,9 @@ public class ExPlayer implements Player {
     }
 
     @Override
-    public void setDisplay(SurfaceView surfaceView) {
+    public void setDisplay(Surface surface, TextureView textureView) {
         if(mEngine != null) {
-            mEngine.setDisplay(surfaceView);
+            mEngine.setDisplay(surface, textureView);
         }
     }
 
@@ -152,12 +151,12 @@ public class ExPlayer implements Player {
 
     @Override
     public String getCurrentTime() {
-        return TimeUtils.formatMediaTime((long)getCurrentDuration());
+        return ExUtils.formatMediaTime((long)getCurrentDuration());
     }
 
     @Override
     public String getTotalTime() {
-        return TimeUtils.formatMediaTime((long)getTotalDuration());
+        return ExUtils.formatMediaTime((long)getTotalDuration());
     }
 
     @Override

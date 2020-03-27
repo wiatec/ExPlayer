@@ -14,7 +14,7 @@ public interface Engine {
     void init(Context context);
 
     void setUrl(String url);
-    void setDisplay(SurfaceView surfaceView);
+    void setDisplay(Surface surface, TextureView textureView);
     void setListener(OnPlayListener onPlayListener);
     void setHeaders(Map<String, String> headers);
 

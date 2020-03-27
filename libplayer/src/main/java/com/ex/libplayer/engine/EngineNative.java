@@ -3,23 +3,25 @@ package com.ex.libplayer.engine;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Surface;
-import android.view.SurfaceView;
 import android.view.TextureView;
 
 
 import com.ex.libplayer.Constant;
 import com.ex.libplayer.listener.OnPlayListener;
+import com.ex.libplayer.player.Player;
 
 import java.util.HashMap;
 import java.util.Map;
 
+
 public class EngineNative implements Engine{
 
     private Context context;
-    private SurfaceView surfaceView;
     private MediaPlayer player;
+    private Surface surface;
     private String url;
     private OnPlayListener onPlayListener;
     private Map<String, String> headers;
@@ -40,57 +42,45 @@ public class EngineNative implements Engine{
     }
 
     @Override
-    public void setDisplay(SurfaceView surfaceView) {
-        this.surfaceView = surfaceView;
-        player.setDisplay(surfaceView.getHolder());
+    public void setDisplay(Surface surface, TextureView textureView) {
+        this.surface = surface;
+        player.setSurface(surface);
     }
 
     @Override
     public void setListener(OnPlayListener onPlayListener) {
         this.onPlayListener = onPlayListener;
-        player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                mp.start();
-                if(onPlayListener != null){
-                    onPlayListener.onPlayerSizeChanged(mp.getVideoWidth(), mp.getVideoHeight());
-                    onPlayListener.onPlayerPrepared();
-                    onPlayListener.onPlayerPlaying();
+        player.setOnPreparedListener(iMediaPlayer -> {
+            iMediaPlayer.start();
+            if(onPlayListener != null){
+                onPlayListener.onPlayerSizeChanged(iMediaPlayer.getVideoWidth(), iMediaPlayer.getVideoHeight());
+                onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PREPARED);
 
-                }
             }
         });
         player.setOnInfoListener((mp, what, extra) -> {
-            if(onPlayListener != null && what == MediaPlayer.MEDIA_INFO_BUFFERING_START){
-                onPlayListener.onPlayerBuffering();
-            }
-            if(onPlayListener != null && what == MediaPlayer.MEDIA_INFO_BUFFERING_END){
-                onPlayListener.onPlayerPlaying();
+            if(onPlayListener != null){
+                if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PLAYING);
+                }
+                if(what == MediaPlayer.MEDIA_INFO_BUFFERING_START){
+                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_BUFFERING);
+                }
+                if(what == MediaPlayer.MEDIA_INFO_BUFFERING_END){
+                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PLAYING);
+                }
             }
             return true;
         });
-        player.setOnSeekCompleteListener(mp -> {
-            mp.start();
-            if(onPlayListener != null){
-                onPlayListener.onPlayerPositionChanged();
-            }
-        });
+        player.setOnSeekCompleteListener(MediaPlayer::start);
         player.setOnCompletionListener(mp -> {
             if(onPlayListener != null){
-                onPlayListener.onPlayerCompleted();
+                onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_COMPLETED);
             }
         });
         player.setOnErrorListener((mp, what, extra) -> {
-            if(what == MediaPlayer.MEDIA_ERROR_TIMED_OUT ||
-                    what == MediaPlayer.MEDIA_ERROR_UNKNOWN ||
-                    what == MediaPlayer.MEDIA_ERROR_IO ||
-                    what == MediaPlayer.MEDIA_ERROR_MALFORMED ||
-                    what == MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK ||
-                    what == MediaPlayer.MEDIA_ERROR_SERVER_DIED ||
-                    what == MediaPlayer.MEDIA_ERROR_UNSUPPORTED) {
-                if (onPlayListener != null) {
-                    onPlayListener.onPlayerError();
-                }
+            if (onPlayListener != null) {
+                onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_ERROR);
             }
             return true;
         });
@@ -103,8 +93,11 @@ public class EngineNative implements Engine{
 
     @Override
     public void start() {
-        if(player == null) return;
+        if(player == null || TextUtils.isEmpty(url)) return;
         Log.d(Constant.c.TAG, "start play url: " + url);
+        if(onPlayListener != null){
+            onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PREPARING);
+        }
         new Thread(() -> {
             try {
                 player.setDataSource(context, Uri.parse(url), headers);
@@ -118,12 +111,15 @@ public class EngineNative implements Engine{
 
     @Override
     public void restart() {
-        if(player == null) return;
+        if(player == null || TextUtils.isEmpty(url)) return;
         Log.d(Constant.c.TAG, "restart play url: " + url);
+        if(onPlayListener != null){
+            onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PREPARING);
+        }
         new Thread(() -> {
             try {
                 player.reset();
-                player.setDisplay(surfaceView.getHolder());
+                player.setSurface(surface);
                 player.setDataSource(context, Uri.parse(url), headers);
                 player.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT);
                 player.prepareAsync();
@@ -145,7 +141,7 @@ public class EngineNative implements Engine{
         if(player != null && player.isPlaying()){
             player.pause();
             if(onPlayListener != null){
-                onPlayListener.onPlayerPause();
+                onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PAUSED);
             }
         }
     }

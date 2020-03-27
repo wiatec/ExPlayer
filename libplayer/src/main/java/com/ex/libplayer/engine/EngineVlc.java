@@ -2,11 +2,14 @@ package com.ex.libplayer.engine;
 
 import android.content.Context;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
-import android.view.SurfaceView;
+import android.view.Surface;
+import android.view.TextureView;
 
 import com.ex.libplayer.Constant;
 import com.ex.libplayer.listener.OnPlayListener;
+import com.ex.libplayer.player.Player;
 
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
@@ -38,10 +41,10 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
     }
 
     @Override
-    public void setDisplay(SurfaceView surfaceView) {
-        player.getVLCVout().setVideoView(surfaceView);
+    public void setDisplay(Surface surface, TextureView textureView) {
+        player.getVLCVout().setVideoView(textureView);
         player.getVLCVout().attachViews();
-        player.getVLCVout().setWindowSize(surfaceView.getWidth(), surfaceView.getHeight());
+        player.getVLCVout().setWindowSize(textureView.getWidth(), textureView.getHeight());
     }
 
     @Override
@@ -57,8 +60,11 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
 
     @Override
     public void start() {
-        if(player == null) return;
+        if(player == null || TextUtils.isEmpty(url)) return;
         Log.d(Constant.c.TAG, "start play url: " + url);
+        if(onPlayListener != null){
+            onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PREPARING);
+        }
         Media media = new Media(libVLC, Uri.parse(url));
         media.addOption("--network-caching=300");
         player.setMedia(media);
@@ -67,8 +73,11 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
 
     @Override
     public void restart() {
-        if(player == null) return;
+        if(player == null || TextUtils.isEmpty(url)) return;
         Log.d(Constant.c.TAG, "restart play url: " + url);
+        if(onPlayListener != null){
+            onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PREPARING);
+        }
         Media media = new Media(libVLC, Uri.parse(url));
         media.addOption("--network-caching=300");
         player.setMedia(media);
@@ -172,33 +181,30 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
         switch (event.type){
             case MediaPlayer.Event.Playing:
                 if(onPlayListener != null){
-                    onPlayListener.onPlayerPrepared();
-                    onPlayListener.onPlayerPlaying();
+                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PREPARED);
+                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PLAYING);
                 }
                 break;
             case MediaPlayer.Event.Buffering:
                 if(onPlayListener != null){
-                    onPlayListener.onPlayerBuffering();
+                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_BUFFERING);
                 }
                 break;
             case MediaPlayer.Event.Paused:
                 if(onPlayListener != null){
-                    onPlayListener.onPlayerPause();
+                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PAUSED);
                 }
                 break;
             case MediaPlayer.Event.Stopped:
                 if(onPlayListener != null){
-                    onPlayListener.onPlayerCompleted();
+                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_COMPLETED);
                 }
                 break;
             case MediaPlayer.Event.PositionChanged:
-                if(onPlayListener != null){
-                    onPlayListener.onPlayerPositionChanged();
-                }
                 break;
             case MediaPlayer.Event.EncounteredError:
                 if(onPlayListener != null){
-                    onPlayListener.onPlayerError();
+                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_ERROR);
                 }
                 break;
             default:
