@@ -46,7 +46,7 @@ publish {
     userOrg = 'patrickxu'
     groupId = 'com.ex.lib'
     artifactId = 'explayer'
-    publishVersion = '1.0.1'
+    publishVersion = '1.0.2'
     desc = 'play component for android'
     website = 'https://github.com/wiatec/ExPlayer'
 }
@@ -63,7 +63,7 @@ publish {
 
 /////////////////////////////、////////  其它项目引用说明   ///////////////////////////////////////////
 
-//  引用  implementation 'com.ex.lib:explayer:1.0.1'
+//  引用  implementation 'com.ex.lib:explayer:1.0.2'
 
 //  修改需要引入的模块的build.gradle文件
 //  defaultConfig 标签内增加
