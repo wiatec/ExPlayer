@@ -161,10 +161,12 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         if (this.surfaceTexture == null) {
+            Log.d(Constant.c.TAG, "onSurfaceTextureAvailable");
             this.surfaceTexture = surface;
             mEngine.setDisplay(new Surface(surfaceTexture), this.textureView);
             start();
         } else {
+            Log.d(Constant.c.TAG, "onSurfaceTextureAvailable1");
             textureView.setSurfaceTexture(surfaceTexture);
         }
     }
@@ -258,12 +260,14 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
 
     public void forward(){
         if(mEngine != null){
+            lastPlayPosition = 0f;
             mEngine.forward(15 * 1000);
         }
     }
 
     public void rewind(){
         if(mEngine != null){
+            lastPlayPosition = 0f;
             mEngine.rewind(15 * 1000);
         }
     }

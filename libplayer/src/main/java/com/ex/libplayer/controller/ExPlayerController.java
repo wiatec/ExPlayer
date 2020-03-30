@@ -7,10 +7,12 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -21,6 +23,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.ex.libplayer.Constant;
 import com.ex.libplayer.R;
 import com.ex.libplayer.entities.ExPlayInfo;
 import com.ex.libplayer.enu.EnumPlayStatus;
@@ -40,6 +43,7 @@ public class ExPlayerController extends FrameLayout implements Controller {
     private static final int MSG_UPDATE_PLAY_MODE = 1;
     private static final int MSG_UPDATE_PLAY_STATUS = 2;
     private static final int MSG_UPDATE_PROGRESS = 3;
+    private static final int MSG_HIDE_CONTROL_VIEW = 4;
 
     private Context context;
 
@@ -65,33 +69,41 @@ public class ExPlayerController extends FrameLayout implements Controller {
     private ProgressBar progressBar;
     private ImageButton ibtFullScreen;
 
-    private LinearLayout loadingView;
-    private ProgressBar pbLoading;
-    private TextView tvStatus;
-
     private float touchDownPointX;
     private float touchUpPointX;
 
+    private LinearLayout loadingView;
+    private ProgressBar pbLoading;
+    private TextView tvStatus;
+    private ImageButton ibtReplay;
+
+    private LinearLayout moreView;
+    private TextView tvEngine;
+    private Button btEngineNative;
+    private Button btEngineIjk;
+    private Button btEngineExo;
+    private Button btEngineVlc;
+
     private Timer timerAutoHideControlView;
     private Timer progressTimer;
-    private Handler handler = new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(@NonNull Message msg) {
-            switch (msg.what){
-                case MSG_UPDATE_PLAY_MODE:
-                    onPlayModeUpdated();
-                    break;
-                case MSG_UPDATE_PLAY_STATUS:
-                    onPlayStatusUpdated();
-                    break;
-                case MSG_UPDATE_PROGRESS:
-                    onProgressUpdated();
-                    break;
-                default:
-                    break;
-            }
-            return true;
+    private Handler handler = new Handler(msg -> {
+        switch (msg.what){
+            case MSG_UPDATE_PLAY_MODE:
+                onPlayModeUpdated();
+                break;
+            case MSG_UPDATE_PLAY_STATUS:
+                onPlayStatusUpdated();
+                break;
+            case MSG_UPDATE_PROGRESS:
+                onProgressUpdated();
+                break;
+            case MSG_HIDE_CONTROL_VIEW:
+                setControlViewVisibility(false);
+                break;
+            default:
+                break;
         }
+        return true;
     });
 
     public ExPlayerController(@NonNull Context context) {
@@ -152,7 +164,9 @@ public class ExPlayerController extends FrameLayout implements Controller {
         LayoutParams params = new LayoutParams(ibtSize, ibtSize);
         params.gravity = Gravity.END | Gravity.CENTER_VERTICAL;
         this.topView.addView(this.ibtMore, params);
-        ibtMore.setOnClickListener(v -> changeEngine(Player.ENGINE_EXO));
+        ibtMore.setOnClickListener(v -> {
+            setMoreViewVisibility(true);
+        });
     }
 
     // 初始化屏幕中间响应触摸动作的UI
@@ -177,6 +191,7 @@ public class ExPlayerController extends FrameLayout implements Controller {
                     float diff = touchUpPointX - touchDownPointX;
                     if(Math.abs(diff) <= 30f){
                         setControlViewVisibility(topView.getVisibility() == View.GONE);
+                        setMoreViewVisibility(false);
                     }else if (diff > 30){
                         playView.forward();
                     }else if (diff < -30){
@@ -220,7 +235,11 @@ public class ExPlayerController extends FrameLayout implements Controller {
         ibtPlay.setImageDrawable(context.getDrawable(R.drawable.exo_icon_play));
         LayoutParams params = new LayoutParams(ibtSize, ibtSize);
         this.bottomView.addView(this.ibtPlay, params);
-        ibtPlay.setOnClickListener(v -> playOrPause());
+        ibtPlay.setOnClickListener(v -> {
+            playOrPause();
+            setControlViewVisibility(true);
+            startAutoHideTimer();
+        });
     }
 
     // 初始化当前时长控件
@@ -257,6 +276,7 @@ public class ExPlayerController extends FrameLayout implements Controller {
         LayoutParams params = new LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.setMargins(0, 0, margin , 0);
         this.bottomView.addView(this.tvTotalTime, params);
     }
 
@@ -272,7 +292,11 @@ public class ExPlayerController extends FrameLayout implements Controller {
         LayoutParams params = new LayoutParams(ibtSize, ibtSize);
         params.setMargins(margin, 0, 0 , 0);
         this.bottomView.addView(this.ibtFullScreen, params);
-        ibtFullScreen.setOnClickListener(v -> fullScreenOrExit());
+        ibtFullScreen.setOnClickListener(v -> {
+            fullScreenOrExit();
+            setControlViewVisibility(true);
+            startAutoHideTimer();
+        });
     }
 
     // 初始化加载提示UI
@@ -288,6 +312,7 @@ public class ExPlayerController extends FrameLayout implements Controller {
         this.addView(this.loadingView, params);
         initPbLoading();
         initTvStatus();
+        initBtnReplay();
     }
 
     private void initPbLoading(){
@@ -310,10 +335,118 @@ public class ExPlayerController extends FrameLayout implements Controller {
         this.loadingView.addView(this.tvStatus, params);
     }
 
+    // 初始化重播按钮
+    private void initBtnReplay(){
+        ibtReplay = new ImageButton(context);
+        int padding = ExUtils.dp2px(context, 10);
+        ibtReplay.setPadding(padding, padding, padding, padding);
+        ibtReplay.setBackgroundColor(Color.TRANSPARENT);
+        ibtReplay.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        ibtReplay.setCropToPadding(true);
+        ibtReplay.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_replay));
+        LayoutParams params = new LayoutParams(ibtSize, ibtSize);
+        params.setMargins(margin, 0, 0 , 0);
+        this.loadingView.addView(this.ibtReplay, params);
+        ibtReplay.setOnClickListener(v -> {
+            if(playView != null){
+                playView.restart();
+            }
+        });
+        ibtReplay.setVisibility(GONE);
+    }
+
+    // 初始化更多设置UI
+    private void initMoreView() {
+        moreView = new LinearLayout(context);
+        moreView.setBackgroundResource(R.color.lpColorT5);
+        moreView.setGravity(Gravity.CENTER);
+        moreView.setOrientation(LinearLayout.HORIZONTAL);
+        moreView.setPadding(padding, padding, padding, padding);
+        LayoutParams params = new LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.gravity = Gravity.CENTER;
+        this.addView(this.moreView, params);
+        initTextEngine();
+        initBtEngineNative();
+        initBtEngineIjk();
+        initBtEngineExo();
+        initBtEngineVlc();
+    }
+
+    private void initTextEngine() {
+        tvEngine = new TextView(context);
+        tvEngine.setText("PLAYER:  ");
+        tvEngine.setTextColor(Color.WHITE);
+        LayoutParams params = new LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        this.moreView.addView(this.tvEngine, params);
+    }
+
+    private void initBtEngineNative() {
+        btEngineNative = new Button(context);
+        btEngineNative.setBackgroundColor(Color.TRANSPARENT);
+        btEngineNative.setText("Native");
+        btEngineNative.setTextColor(Color.WHITE);
+        LayoutParams params = new LayoutParams(ExUtils.dp2px(context, 60),
+                ExUtils.dp2px(context, 40));
+        this.moreView.addView(this.btEngineNative, params);
+        btEngineNative.setOnClickListener(v -> {
+            changeEngine(Player.ENGINE_NATIVE);
+            setMoreViewVisibility(false);
+        });
+    }
+
+    private void initBtEngineIjk() {
+        btEngineIjk = new Button(context);
+        btEngineIjk.setBackgroundColor(Color.TRANSPARENT);
+        btEngineIjk.setText("IJK");
+        btEngineIjk.setTextColor(Color.WHITE);
+        LayoutParams params = new LayoutParams(ExUtils.dp2px(context, 60),
+                ExUtils.dp2px(context, 40));
+        this.moreView.addView(this.btEngineIjk, params);
+        btEngineIjk.setOnClickListener(v -> {
+            changeEngine(Player.ENGINE_IJK);
+            setMoreViewVisibility(false);
+        });
+    }
+
+    private void initBtEngineExo() {
+        btEngineExo = new Button(context);
+        btEngineExo.setBackgroundColor(Color.TRANSPARENT);
+        btEngineExo.setText("Exo");
+        btEngineExo.setTextColor(Color.WHITE);
+        LayoutParams params = new LayoutParams(ExUtils.dp2px(context, 60),
+                ExUtils.dp2px(context, 40));
+        this.moreView.addView(this.btEngineExo, params);
+        btEngineExo.setOnClickListener(v -> {
+            changeEngine(Player.ENGINE_EXO);
+            setMoreViewVisibility(false);
+        });
+    }
+
+    private void initBtEngineVlc() {
+        btEngineVlc = new Button(context);
+        btEngineVlc.setBackgroundColor(Color.TRANSPARENT);
+        btEngineVlc.setText("Vlc");
+        btEngineVlc.setTextColor(Color.WHITE);
+        LayoutParams params = new LayoutParams(ExUtils.dp2px(context, 60),
+                ExUtils.dp2px(context, 40));
+        this.moreView.addView(this.btEngineVlc, params);
+        btEngineVlc.setOnClickListener(v -> {
+            changeEngine(Player.ENGINE_VLC);
+            setMoreViewVisibility(false);
+        });
+    }
+
     @Override
     public void onBindPlayView(ExPlayView playView) {
         this.playView = playView;
-        setTitle(playView.getTitle());
+        if(!TextUtils.isEmpty(playView.getTitle())) {
+            tvTitle.setText(playView.getTitle());
+        }
+        startAutoHideTimer();
     }
 
     @Override
@@ -339,12 +472,9 @@ public class ExPlayerController extends FrameLayout implements Controller {
         super.onDetachedFromWindow();
     }
 
-    private void setTitle(String title){
-        if(!TextUtils.isEmpty(title)) {
-            tvTitle.setText(title);
-        }
-    }
-
+    /**
+     * 更新播放模式相关UI
+     */
     private void onPlayModeUpdated(){
         if (playMode == Player.PLAY_MODE_NORMAL) {
             ibtFullScreen.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_full_screen));
@@ -353,6 +483,9 @@ public class ExPlayerController extends FrameLayout implements Controller {
         }
     }
 
+    /**
+     * 更新播放状态相关UI
+     */
     private void onPlayStatusUpdated(){
         if(playStatus == EnumPlayStatus.IDLE ||
                 playStatus == EnumPlayStatus.PREPARING){
@@ -361,80 +494,49 @@ public class ExPlayerController extends FrameLayout implements Controller {
             progressBar.setProgress(0);
             ibtPlay.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_play));
             setLoadingViewVisibility(true);
+            ibtReplay.setVisibility(GONE);
         }else if(playStatus == EnumPlayStatus.BUFFERING){
             setLoadingViewVisibility(true);
+            ibtReplay.setVisibility(GONE);
         }else if(playStatus == EnumPlayStatus.PREPARED){
             setLoadingViewVisibility(false);
+            ibtReplay.setVisibility(GONE);
         }else if(playStatus == EnumPlayStatus.PLAYING){
             ibtPlay.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_pause));
             setLoadingViewVisibility(false);
+            ibtReplay.setVisibility(GONE);
             startProgressTimer();
         }else if(playStatus == EnumPlayStatus.PAUSED){
             ibtPlay.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_play));
             cancelProgressTimer();
         }else if(playStatus == EnumPlayStatus.COMPLETED){
-            ibtPlay.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_play));
-            setLoadingViewVisibility(true);
-            tvStatus.setText("play completed!");
-            pbLoading.setVisibility(GONE);
-            cancelProgressTimer();
+            if(ibtReplay.getVisibility() == GONE) {
+                ibtPlay.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_play));
+                setLoadingViewVisibility(true);
+                tvStatus.setText("play completed!");
+                pbLoading.setVisibility(GONE);
+                ibtReplay.setVisibility(VISIBLE);
+                cancelProgressTimer();
+            }
         }else if(playStatus == EnumPlayStatus.ERROR){
             ibtPlay.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_play));
             setLoadingViewVisibility(true);
             tvStatus.setText("play error!");
             pbLoading.setVisibility(GONE);
+            ibtReplay.setVisibility(VISIBLE);
             cancelProgressTimer();
         }
     }
 
+    /**
+     * 更新播放进度信息
+     */
     private void onProgressUpdated(){
-        if(exPlayInfo != null) {
-            tvCurrentTime.setText(ExUtils.formatMediaTime((long) exPlayInfo.getCurrentTime()));
-            tvTotalTime.setText(ExUtils.formatMediaTime((long) exPlayInfo.getTotalTime()));
-            float progress = (exPlayInfo.getCurrentTime() / exPlayInfo.getTotalTime()) * 100;
+        if(playView != null) {
+            tvCurrentTime.setText(ExUtils.formatMediaTime((long) playView.getCurrentDuration()));
+            tvTotalTime.setText(ExUtils.formatMediaTime((long) playView.getTotalDuration()));
+            float progress = (playView.getCurrentDuration() / playView.getTotalDuration()) * 100;
             progressBar.setProgress((int) progress);
-        }
-    }
-
-    private void startAutoHideTimer(){
-        if(timerAutoHideControlView != null){
-            timerAutoHideControlView.cancel();
-            timerAutoHideControlView = null;
-        }
-        timerAutoHideControlView = new Timer();
-        timerAutoHideControlView.schedule(new TimerTask() {
-            @Override
-            public void run() {
-
-            }
-        }, 1000 * 15);
-    }
-
-    private void cancelAutoHideTimer(){
-        if(timerAutoHideControlView != null){
-            timerAutoHideControlView.cancel();
-            timerAutoHideControlView = null;
-        }
-    }
-
-    private void startProgressTimer() {
-        if(progressTimer != null){
-            progressTimer.cancel();
-            progressTimer = null;
-        }
-        progressTimer = new Timer();
-        progressTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-            handler.sendEmptyMessage(MSG_UPDATE_PROGRESS);
-            }
-        }, 10L, 500L);
-    }
-
-    public void cancelProgressTimer(){
-        if(progressTimer != null){
-            progressTimer.cancel();
-            progressTimer = null;
         }
     }
 
@@ -459,17 +561,22 @@ public class ExPlayerController extends FrameLayout implements Controller {
     }
 
     private void setMoreViewVisibility(boolean visible){
-
+        if(moreView == null){
+            initMoreView();
+        }
+        moreView.setVisibility(visible? VISIBLE: GONE);
     }
 
     private void setControlViewVisibility(boolean visible){
         topView.setVisibility(visible? VISIBLE: View.GONE);
         bottomView.setVisibility(visible? VISIBLE: View.GONE);
+        startAutoHideTimer();
     }
 
     private void setLoadingViewVisibility(boolean visible){
         loadingView.setVisibility(visible? VISIBLE: GONE);
         pbLoading.setVisibility(visible? VISIBLE: GONE);
+        tvStatus.setText("loading ...");
     }
 
     public void setBtnFullScreenVisibility(boolean visible){
@@ -478,6 +585,48 @@ public class ExPlayerController extends FrameLayout implements Controller {
 
     public void setBtnMoreVisibility(boolean visibility){
         ibtMore.setVisibility(visibility? VISIBLE: GONE);
+    }
+
+    private void startAutoHideTimer(){
+        if(timerAutoHideControlView != null){
+            timerAutoHideControlView.cancel();
+            timerAutoHideControlView = null;
+        }
+        timerAutoHideControlView = new Timer();
+        timerAutoHideControlView.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                handler.sendEmptyMessage(MSG_HIDE_CONTROL_VIEW);
+            }
+        }, 1000 * 15);
+    }
+
+    private void cancelAutoHideTimer(){
+        if(timerAutoHideControlView != null){
+            timerAutoHideControlView.cancel();
+            timerAutoHideControlView = null;
+        }
+    }
+
+    private void startProgressTimer() {
+        if(progressTimer != null){
+            progressTimer.cancel();
+            progressTimer = null;
+        }
+        progressTimer = new Timer();
+        progressTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                handler.sendEmptyMessage(MSG_UPDATE_PROGRESS);
+            }
+        }, 10L, 500L);
+    }
+
+    public void cancelProgressTimer(){
+        if(progressTimer != null){
+            progressTimer.cancel();
+            progressTimer = null;
+        }
     }
 
 }

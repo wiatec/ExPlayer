@@ -134,6 +134,9 @@ public class EngineNative implements Engine{
     public void resume() {
         if(player != null){
             player.start();
+            if(onPlayListener != null){
+                onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PLAYING);
+            }
         }
     }
 

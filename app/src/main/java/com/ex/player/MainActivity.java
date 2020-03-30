@@ -38,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
         exPlayView = findViewById(R.id.ex_play_view);
         exPlayView.setDataSource(URL, "JW");
         ExPlayerController  controller = new ExPlayerController(this);
+        controller.setBtnFullScreenVisibility(true);
+        controller.setBtnMoreVisibility(false);
         exPlayView.setController(controller);
         exPlayView.prepare(Player.ENGINE_IJK);
     }

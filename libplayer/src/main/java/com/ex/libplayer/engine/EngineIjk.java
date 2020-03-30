@@ -62,7 +62,6 @@ public class EngineIjk implements Engine{
             if(onPlayListener != null){
                 onPlayListener.onPlayerSizeChanged(iMediaPlayer.getVideoWidth(), iMediaPlayer.getVideoHeight());
                 onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PREPARED);
-
             }
         });
         player.setOnInfoListener((mp, what, extra) -> {
@@ -134,6 +133,9 @@ public class EngineIjk implements Engine{
     public void resume() {
         if(player != null){
             player.start();
+            if(onPlayListener != null){
+                onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PLAYING);
+            }
         }
     }
 
