@@ -38,7 +38,7 @@ dependencies {
 }
 
 
-////////////////////////////////////// 上传到jcenter配置  ///////////////////////////////////////////
+///////////////////////////////////////// 上传到jcenter  ////////////////////////////////////////////
 
 apply plugin: 'com.novoda.bintray-release'
 
@@ -52,7 +52,7 @@ publish {
 }
 
 // 上传命令
-// ./gradlew clean build bintrayUpload -PbintrayUser=patrickxu -PbintrayKey=89a105cd2d333581a29470d5e2b9e5f774b7bb59 -PdryRun=false
+// ./gradlew clean build bintrayUpload -PbintrayUser=patrickxu -PbintrayKey=PUBLISH_KEY -PdryRun=false
 
 // 项目仓库位置 https://jcenter.bintray.com/com/ex/lib/explayer/
 
