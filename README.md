@@ -2,6 +2,18 @@
 
 Android player library with four engine(native, Ijk, Exo, Vlc)
 
+### Usage
+
+```
+exPlayView = findViewById(R.id.ex_play_view);
+exPlayView.setDataSource(URL, "Title");
+ExPlayerController  controller = new ExPlayerController(this);
+controller.setBtnFullScreenVisibility(true);
+controller.setBtnMoreVisibility(false);
+exPlayView.setController(controller);
+exPlayView.prepare(Player.ENGINE_NATIVE);
+```
+
 ### Install
 ```
 implementation 'com.ex.lib:explayer:1.0.2'
