@@ -8,6 +8,7 @@ import android.view.Surface;
 import android.view.TextureView;
 
 import com.ex.libplayer.Constant;
+import com.ex.libplayer.enu.EnumPlayStatus;
 import com.ex.libplayer.listener.OnPlayListener;
 import com.ex.libplayer.player.Player;
 
@@ -63,7 +64,7 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
         if(player == null || TextUtils.isEmpty(url)) return;
         Log.d(Constant.c.TAG, "start play url: " + url);
         if(onPlayListener != null){
-            onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PREPARING);
+            onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PREPARING);
         }
         Media media = new Media(libVLC, Uri.parse(url));
         media.addOption("--network-caching=300");
@@ -76,7 +77,7 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
         if(player == null || TextUtils.isEmpty(url)) return;
         Log.d(Constant.c.TAG, "restart play url: " + url);
         if(onPlayListener != null){
-            onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PREPARING);
+            onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PREPARING);
         }
         Media media = new Media(libVLC, Uri.parse(url));
         media.addOption("--network-caching=300");
@@ -181,30 +182,30 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
         switch (event.type){
             case MediaPlayer.Event.Playing:
                 if(onPlayListener != null){
-                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PREPARED);
-                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PLAYING);
+                    onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PREPARED);
+                    onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PLAYING);
                 }
                 break;
             case MediaPlayer.Event.Buffering:
                 if(onPlayListener != null){
-                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_BUFFERING);
+//                    onPlayListener.onPlayerStatusChanged(EnumPlayStatus.BUFFERING);
                 }
                 break;
             case MediaPlayer.Event.Paused:
                 if(onPlayListener != null){
-                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PAUSED);
+                    onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PAUSED);
                 }
                 break;
             case MediaPlayer.Event.Stopped:
                 if(onPlayListener != null){
-                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_COMPLETED);
+                    onPlayListener.onPlayerStatusChanged(EnumPlayStatus.COMPLETED);
                 }
                 break;
             case MediaPlayer.Event.PositionChanged:
                 break;
             case MediaPlayer.Event.EncounteredError:
                 if(onPlayListener != null){
-                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_ERROR);
+                    onPlayListener.onPlayerStatusChanged(EnumPlayStatus.ERROR);
                 }
                 break;
             default:

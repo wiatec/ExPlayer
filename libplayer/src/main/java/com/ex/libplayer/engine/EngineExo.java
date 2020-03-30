@@ -8,6 +8,7 @@ import android.view.Surface;
 import android.view.TextureView;
 
 import com.ex.libplayer.Constant;
+import com.ex.libplayer.enu.EnumPlayStatus;
 import com.ex.libplayer.listener.OnPlayListener;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -61,17 +62,17 @@ public class EngineExo implements Engine{
                 }else if(playbackState == com.google.android.exoplayer2.ExoPlayer.STATE_BUFFERING){
                     isPlaying = false;
                     if(onPlayListener != null){
-                        onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_BUFFERING);
+                        onPlayListener.onPlayerStatusChanged(EnumPlayStatus.BUFFERING);
                     }
                 }else if(playbackState == com.google.android.exoplayer2.ExoPlayer.STATE_READY){
                     isPlaying = playWhenReady;
                     if(onPlayListener != null && playWhenReady){
-                        onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_PLAYING);
+                        onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PLAYING);
                     }
                 }else if(playbackState == com.google.android.exoplayer2.ExoPlayer.STATE_ENDED){
                     isPlaying = false;
                     if(onPlayListener != null){
-                        onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_COMPLETED);
+                        onPlayListener.onPlayerStatusChanged(EnumPlayStatus.COMPLETED);
                     }
                 }
             }
@@ -80,7 +81,7 @@ public class EngineExo implements Engine{
             public void onPlayerError(ExoPlaybackException error) {
                 isPlaying = false;
                 if(onPlayListener != null){
-                    onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_ERROR);
+                    onPlayListener.onPlayerStatusChanged(EnumPlayStatus.ERROR);
                 }
             }
         });
@@ -96,7 +97,7 @@ public class EngineExo implements Engine{
             public void onRenderedFirstFrame() {
                 isPlaying = true;
                 if (onPlayListener != null) {
-                    onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_PREPARED);
+                    onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PREPARED);
                 }
             }
         });
@@ -112,7 +113,7 @@ public class EngineExo implements Engine{
         if(player == null || TextUtils.isEmpty(url)) return;
         Log.d(Constant.c.TAG, "start play url: " + url);
         if(onPlayListener != null){
-            onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_PREPARING);
+            onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PREPARING);
         }
         try {
             player.stop(true);
@@ -135,7 +136,7 @@ public class EngineExo implements Engine{
         if(player == null || TextUtils.isEmpty(url)) return;
         Log.d(Constant.c.TAG, "restart play url: " + url);
         if(onPlayListener != null){
-            onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_PREPARING);
+            onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PREPARING);
         }
         try {
             player.stop(true);
@@ -165,7 +166,7 @@ public class EngineExo implements Engine{
         if(player != null){
             player.setPlayWhenReady(false);
             if(onPlayListener != null){
-                onPlayListener.onPlayerStatusChanged(com.ex.libplayer.player.Player.PLAY_STATE_PAUSED);
+                onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PAUSED);
             }
         }
     }

@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.SurfaceTexture;
-import android.os.Handler;
-import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Surface;
@@ -25,6 +23,7 @@ import com.ex.libplayer.engine.EngineIjk;
 import com.ex.libplayer.engine.EngineNative;
 import com.ex.libplayer.engine.EngineVlc;
 import com.ex.libplayer.entities.ExPlayInfo;
+import com.ex.libplayer.enu.EnumPlayStatus;
 import com.ex.libplayer.listener.OnPlayListener;
 import com.ex.libplayer.player.Player;
 import com.ex.libplayer.util.ExUtils;
@@ -41,9 +40,6 @@ import java.util.TimerTask;
  */
 public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextureListener, OnPlayListener {
 
-    private static final int MSG_UPDATE_PLAY_MODE = 0x001;
-    private static final int MSG_UPDATE_PLAY_STATUS = 0x002;
-    private static final int MSG_UPDATE_PROGRESS = 0x003;
 
     private Context context;
     // 存放视频播放器和控制器的容器
@@ -59,39 +55,13 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
     // 播放引擎
     private Engine mEngine;
     private OnPlayListener onPlayListener;
+    private float lastPlayPosition;
 
     private String url;
     private String title;
     private Map<String, String> headers;
     private int playMode = Player.PLAY_MODE_NORMAL;
-    private int playStatus = Player.PLAY_STATE_IDLE;
-
-    private Timer progressTimer;
-    private Handler handler = new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(@NonNull Message msg) {
-            switch (msg.what){
-                case MSG_UPDATE_PLAY_MODE:
-                    if(controller != null) {
-                        controller.onPlayInfoChanged(ExPlayInfo.valueOfMode(playMode));
-                    }
-                    break;
-                case MSG_UPDATE_PLAY_STATUS:
-                    if(controller != null) {
-                        controller.onPlayInfoChanged(ExPlayInfo.valueOfStatus(playStatus));
-                    }
-                    break;
-                case MSG_UPDATE_PROGRESS:
-                    if(controller != null) {
-                        controller.onPlayInfoChanged(ExPlayInfo.valueOfProgress(mEngine.getCurrentDuration(), mEngine.getTotalDuration()));
-                    }
-                    break;
-                default:
-                    break;
-            }
-            return true;
-        }
-    });
+    private EnumPlayStatus playStatus = EnumPlayStatus.IDLE;
 
     public ExPlayView(@NonNull Context context) {
         this(context, null);
@@ -116,35 +86,6 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
         this.addView(this.container, params);
-    }
-
-    private void startProgressTimer() {
-        if(progressTimer != null){
-            progressTimer.cancel();
-            progressTimer = null;
-        }
-        progressTimer = new Timer();
-        progressTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if(mEngine != null && mEngine.isPlaying()) {
-                    handler.sendEmptyMessage(MSG_UPDATE_PROGRESS);
-                }
-            }
-        }, 10L, 500L);
-    }
-
-    public void cancelProgressTimer(){
-        if(progressTimer != null){
-            progressTimer.cancel();
-            progressTimer = null;
-        }
-    }
-
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        cancelProgressTimer();
     }
 
     public void setDataSource(String url) {
@@ -199,7 +140,7 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
             mEngine = new EngineExo();
             mEngine.init(context);
         }
-        playStatus = Player.PLAY_STATE_IDLE;
+        playStatus = EnumPlayStatus.IDLE;
         mEngine.setUrl(url);
         mEngine.setHeaders(headers);
         mEngine.setListener(this);
@@ -223,7 +164,6 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
             this.surfaceTexture = surface;
             mEngine.setDisplay(new Surface(surfaceTexture), this.textureView);
             start();
-            startProgressTimer();
         } else {
             textureView.setSurfaceTexture(surfaceTexture);
         }
@@ -261,13 +201,12 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
     }
 
     @Override
-    public void onPlayerStatusChanged(int status) {
-        Log.d(Constant.c.TAG, "onPlayerStatusChanged: " + status);
+    public void onPlayerStatusChanged(EnumPlayStatus status) {
+        Log.d(Constant.c.TAG, "onPlayerStatusChanged: " + status.getDes());
         if(onPlayListener != null){
             onPlayListener.onPlayerStatusChanged(status);
         }
-        playStatus = status;
-        handler.sendEmptyMessage(MSG_UPDATE_PLAY_STATUS);
+        changePlayStatus(status);
     }
 
     @Override
@@ -278,19 +217,18 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
     }
 
     public void start() {
-        if(playStatus != Player.PLAY_STATE_IDLE){
+        if(playStatus != EnumPlayStatus.IDLE){
             Log.d(Constant.c.TAG, "PLAY_STATE_IDLE ERROR: " + playStatus);
             return;
         }
         if(mEngine != null){
-            playStatus = Player.PLAY_STATE_PREPARING;
-            handler.sendEmptyMessage(MSG_UPDATE_PLAY_STATUS);
+            changePlayStatus(EnumPlayStatus.PREPARING);
             mEngine.start();
         }
     }
 
     public void resume() {
-        if(playStatus != Player.PLAY_STATE_PAUSED){
+        if(playStatus != EnumPlayStatus.PAUSED){
             Log.d(Constant.c.TAG, "PLAY_STATE_PAUSED ERROR: " + playStatus);
             return;
         }
@@ -300,7 +238,7 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
     }
 
     public void pause() {
-        if(playStatus != Player.PLAY_STATE_PLAYING && playStatus != Player.PLAY_STATE_BUFFERING){
+        if(playStatus != EnumPlayStatus.PLAYING && playStatus != EnumPlayStatus.BUFFERING){
             Log.d(Constant.c.TAG, "PLAY_STATE_PLAYING OR PLAY_STATE_BUFFERING ERROR: " + playStatus);
             return;
         }
@@ -311,6 +249,7 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
 
     public void restart() {
         if(mEngine != null){
+            lastPlayPosition = 0;
             mEngine.setUrl(url);
             mEngine.setHeaders(headers);
             mEngine.restart();
@@ -331,22 +270,22 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
 
     public void release(){
         if(mEngine != null) {
+            lastPlayPosition = 0;
             mEngine.release();
             mEngine = null;
-            playStatus = Player.PLAY_STATE_IDLE;
+            playStatus = EnumPlayStatus.IDLE;
         }
-        cancelProgressTimer();
     }
 
     public void changeEngine(int engine){
         if(onPlayListener != null){
             onPlayListener.onPlayerEngineChanged(engine);
         }
+        lastPlayPosition = mEngine.getCurrentDuration();
         mEngine.release();
         mEngine = null;
         this.engine = engine;
         this.surfaceTexture = null;
-        cancelProgressTimer();
         prepare();
     }
 
@@ -363,8 +302,7 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
         contentView.addView(container, params);
-        playMode = Player.PLAY_MODE_FULL_SCREEN;
-        handler.sendEmptyMessage(MSG_UPDATE_PLAY_MODE);
+        changePlayMode(Player.PLAY_MODE_FULL_SCREEN);
     }
 
     @SuppressLint("SourceLockedOrientationActivity")
@@ -380,8 +318,30 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT);
             this.addView(container, params);
-            playMode = Player.PLAY_MODE_NORMAL;
-            handler.sendEmptyMessage(MSG_UPDATE_PLAY_MODE);
+            changePlayMode(Player.PLAY_MODE_NORMAL);
+        }
+    }
+
+    private void changePlayStatus(EnumPlayStatus playStatus){
+        this.playStatus = playStatus;
+        if(controller != null) {
+            controller.onPlayInfoChanged(ExPlayInfo.valueOfStatus(playStatus));
+        }
+        if(playStatus == EnumPlayStatus.PREPARED){
+            if(lastPlayPosition > 0){
+                mEngine.seekTo(lastPlayPosition);
+            }
+        }else if(playStatus == EnumPlayStatus.COMPLETED){
+            lastPlayPosition = 0;
+        }else if(playStatus == EnumPlayStatus.ERROR){
+            lastPlayPosition = 0;
+        }
+    }
+
+    private void changePlayMode(int playMode){
+        this.playMode = playMode;
+        if(controller != null) {
+            controller.onPlayInfoChanged(ExPlayInfo.valueOfMode(playMode));
         }
     }
 
@@ -392,5 +352,13 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
 
     public String getTitle() {
         return title;
+    }
+
+    public float getCurrentDuration(){
+        return mEngine.getCurrentDuration();
+    }
+
+    public float getTotalDuration(){
+        return mEngine.getTotalDuration();
     }
 }

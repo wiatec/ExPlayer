@@ -1,5 +1,7 @@
 package com.ex.libplayer.entities;
 
+import com.ex.libplayer.enu.EnumPlayStatus;
+
 /**
  * 播放器播放状态和信息改变时会改变的数据
  */
@@ -12,7 +14,7 @@ public class ExPlayInfo {
     // 改变类型
     private int type;
     private int playMode;
-    private int playStatus;
+    private EnumPlayStatus playStatus;
     private float currentTime;
     private float totalTime;
 
@@ -23,7 +25,7 @@ public class ExPlayInfo {
         return info;
     }
 
-    public static ExPlayInfo valueOfStatus(int playStatus){
+    public static ExPlayInfo valueOfStatus(EnumPlayStatus playStatus){
         ExPlayInfo info = new ExPlayInfo();
         info.setType(TYPE_PLAY_STATUS);
         info.setPlayStatus(playStatus);
@@ -37,18 +39,6 @@ public class ExPlayInfo {
         info.setTotalTime(totalTime);
         return info;
 
-    }
-
-    public static int getTypePlayMode() {
-        return TYPE_PLAY_MODE;
-    }
-
-    public static int getTypePlayStatus() {
-        return TYPE_PLAY_STATUS;
-    }
-
-    public static int getTypeProgress() {
-        return TYPE_PROGRESS;
     }
 
     public int getType() {
@@ -67,11 +57,11 @@ public class ExPlayInfo {
         this.playMode = playMode;
     }
 
-    public int getPlayStatus() {
+    public EnumPlayStatus getPlayStatus() {
         return playStatus;
     }
 
-    public void setPlayStatus(int playStatus) {
+    public void setPlayStatus(EnumPlayStatus playStatus) {
         this.playStatus = playStatus;
     }
 

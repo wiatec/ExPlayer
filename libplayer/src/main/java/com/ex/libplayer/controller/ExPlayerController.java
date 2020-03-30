@@ -3,6 +3,8 @@ package com.ex.libplayer.controller;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.os.Handler;
+import android.os.Message;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -21,9 +23,13 @@ import androidx.annotation.Nullable;
 
 import com.ex.libplayer.R;
 import com.ex.libplayer.entities.ExPlayInfo;
+import com.ex.libplayer.enu.EnumPlayStatus;
 import com.ex.libplayer.player.Player;
 import com.ex.libplayer.util.ExUtils;
 import com.ex.libplayer.view.ExPlayView;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ExPlayerController extends FrameLayout implements Controller {
 
@@ -31,11 +37,16 @@ public class ExPlayerController extends FrameLayout implements Controller {
     private static final String COLOR_PRIMARY = "#FF2196F3";
     private static final String COLOR_ACCENT = "#FFB1D3F7";
 
-    private ExPlayView playView;
+    private static final int MSG_UPDATE_PLAY_MODE = 1;
+    private static final int MSG_UPDATE_PLAY_STATUS = 2;
+    private static final int MSG_UPDATE_PROGRESS = 3;
+
     private Context context;
 
+    private ExPlayView playView;
     private int playMode = Player.PLAY_MODE_NORMAL;
-    private int playStatus = Player.PLAY_STATE_IDLE;
+    private EnumPlayStatus playStatus = EnumPlayStatus.IDLE;
+    private ExPlayInfo exPlayInfo;
 
     private int padding = 8;
     private int margin = 8;
@@ -60,6 +71,28 @@ public class ExPlayerController extends FrameLayout implements Controller {
 
     private float touchDownPointX;
     private float touchUpPointX;
+
+    private Timer timerAutoHideControlView;
+    private Timer progressTimer;
+    private Handler handler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(@NonNull Message msg) {
+            switch (msg.what){
+                case MSG_UPDATE_PLAY_MODE:
+                    onPlayModeUpdated();
+                    break;
+                case MSG_UPDATE_PLAY_STATUS:
+                    onPlayStatusUpdated();
+                    break;
+                case MSG_UPDATE_PROGRESS:
+                    onProgressUpdated();
+                    break;
+                default:
+                    break;
+            }
+            return true;
+        }
+    });
 
     public ExPlayerController(@NonNull Context context) {
         this(context, null);
@@ -287,32 +320,28 @@ public class ExPlayerController extends FrameLayout implements Controller {
     public void onPlayInfoChanged(ExPlayInfo info) {
         if(info.getType() == ExPlayInfo.TYPE_PLAY_MODE){
             this.playMode = info.getPlayMode();
+            handler.sendEmptyMessage(MSG_UPDATE_PLAY_MODE);
         }
         if(info.getType() == ExPlayInfo.TYPE_PLAY_STATUS) {
             this.playStatus = info.getPlayStatus();
+            handler.sendEmptyMessage(MSG_UPDATE_PLAY_STATUS);
         }
-        updateUI(info);
+        if(info.getType() == ExPlayInfo.TYPE_PROGRESS) {
+            this.exPlayInfo = info;
+            handler.sendEmptyMessage(MSG_UPDATE_PROGRESS);
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        cancelAutoHideTimer();
+        cancelProgressTimer();
+        super.onDetachedFromWindow();
     }
 
     private void setTitle(String title){
         if(!TextUtils.isEmpty(title)) {
             tvTitle.setText(title);
-        }
-    }
-
-    private void updateUI(ExPlayInfo info) {
-        switch (info.getType()){
-            case ExPlayInfo.TYPE_PLAY_MODE:
-                onPlayModeUpdated();
-                break;
-            case ExPlayInfo.TYPE_PLAY_STATUS:
-                onPlayStatusUpdated();
-                break;
-            case ExPlayInfo.TYPE_PROGRESS:
-                onProgressUpdated(info);
-                break;
-            default:
-                break;
         }
     }
 
@@ -325,47 +354,98 @@ public class ExPlayerController extends FrameLayout implements Controller {
     }
 
     private void onPlayStatusUpdated(){
-        if(playStatus == Player.PLAY_STATE_IDLE ||
-                playStatus == Player.PLAY_STATE_PREPARING){
+        if(playStatus == EnumPlayStatus.IDLE ||
+                playStatus == EnumPlayStatus.PREPARING){
             tvCurrentTime.setText(INIT_TIME);
             tvTotalTime.setText(INIT_TIME);
             progressBar.setProgress(0);
             ibtPlay.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_play));
             setLoadingViewVisibility(true);
-        }else if(playStatus == Player.PLAY_STATE_PLAYING){
+        }else if(playStatus == EnumPlayStatus.BUFFERING){
+            setLoadingViewVisibility(true);
+        }else if(playStatus == EnumPlayStatus.PREPARED){
+            setLoadingViewVisibility(false);
+        }else if(playStatus == EnumPlayStatus.PLAYING){
             ibtPlay.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_pause));
             setLoadingViewVisibility(false);
-        }else if(playStatus == Player.PLAY_STATE_PAUSED){
+            startProgressTimer();
+        }else if(playStatus == EnumPlayStatus.PAUSED){
             ibtPlay.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_play));
-        }else if(playStatus == Player.PLAY_STATE_COMPLETED){
+            cancelProgressTimer();
+        }else if(playStatus == EnumPlayStatus.COMPLETED){
             ibtPlay.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_play));
             setLoadingViewVisibility(true);
             tvStatus.setText("play completed!");
             pbLoading.setVisibility(GONE);
-        }else if(playStatus == Player.PLAY_STATE_ERROR){
+            cancelProgressTimer();
+        }else if(playStatus == EnumPlayStatus.ERROR){
             ibtPlay.setImageDrawable(context.getDrawable(R.drawable.lp_ic_action_play));
             setLoadingViewVisibility(true);
             tvStatus.setText("play error!");
             pbLoading.setVisibility(GONE);
+            cancelProgressTimer();
         }
     }
 
-    private void onProgressUpdated(ExPlayInfo info){
-        tvCurrentTime.setText(ExUtils.formatMediaTime((long) info.getCurrentTime()));
-        tvTotalTime.setText(ExUtils.formatMediaTime((long) info.getTotalTime()));
-        float progress = (info.getCurrentTime() / info.getTotalTime()) * 100;
-        progressBar.setProgress((int) progress);
+    private void onProgressUpdated(){
+        if(exPlayInfo != null) {
+            tvCurrentTime.setText(ExUtils.formatMediaTime((long) exPlayInfo.getCurrentTime()));
+            tvTotalTime.setText(ExUtils.formatMediaTime((long) exPlayInfo.getTotalTime()));
+            float progress = (exPlayInfo.getCurrentTime() / exPlayInfo.getTotalTime()) * 100;
+            progressBar.setProgress((int) progress);
+        }
+    }
+
+    private void startAutoHideTimer(){
+        if(timerAutoHideControlView != null){
+            timerAutoHideControlView.cancel();
+            timerAutoHideControlView = null;
+        }
+        timerAutoHideControlView = new Timer();
+        timerAutoHideControlView.schedule(new TimerTask() {
+            @Override
+            public void run() {
+
+            }
+        }, 1000 * 15);
+    }
+
+    private void cancelAutoHideTimer(){
+        if(timerAutoHideControlView != null){
+            timerAutoHideControlView.cancel();
+            timerAutoHideControlView = null;
+        }
+    }
+
+    private void startProgressTimer() {
+        if(progressTimer != null){
+            progressTimer.cancel();
+            progressTimer = null;
+        }
+        progressTimer = new Timer();
+        progressTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+            handler.sendEmptyMessage(MSG_UPDATE_PROGRESS);
+            }
+        }, 10L, 500L);
+    }
+
+    public void cancelProgressTimer(){
+        if(progressTimer != null){
+            progressTimer.cancel();
+            progressTimer = null;
+        }
     }
 
     private void changeEngine(int engine){
         playView.changeEngine(engine);
     }
 
-
     private void playOrPause(){
-        if(playStatus == Player.PLAY_STATE_PLAYING){
+        if(playStatus == EnumPlayStatus.PLAYING){
             playView.pause();
-        }else if(playStatus == Player.PLAY_STATE_PAUSED){
+        }else if(playStatus == EnumPlayStatus.PAUSED){
             playView.resume();
         }
     }

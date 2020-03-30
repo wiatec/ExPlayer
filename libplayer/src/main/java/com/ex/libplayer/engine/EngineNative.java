@@ -10,6 +10,7 @@ import android.view.TextureView;
 
 
 import com.ex.libplayer.Constant;
+import com.ex.libplayer.enu.EnumPlayStatus;
 import com.ex.libplayer.listener.OnPlayListener;
 import com.ex.libplayer.player.Player;
 
@@ -54,20 +55,20 @@ public class EngineNative implements Engine{
             iMediaPlayer.start();
             if(onPlayListener != null){
                 onPlayListener.onPlayerSizeChanged(iMediaPlayer.getVideoWidth(), iMediaPlayer.getVideoHeight());
-                onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PREPARED);
+                onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PREPARED);
 
             }
         });
         player.setOnInfoListener((mp, what, extra) -> {
             if(onPlayListener != null){
                 if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
-                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PLAYING);
+                    onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PLAYING);
                 }
                 if(what == MediaPlayer.MEDIA_INFO_BUFFERING_START){
-                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_BUFFERING);
+                    onPlayListener.onPlayerStatusChanged(EnumPlayStatus.BUFFERING);
                 }
                 if(what == MediaPlayer.MEDIA_INFO_BUFFERING_END){
-                    onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PLAYING);
+                    onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PLAYING);
                 }
             }
             return true;
@@ -75,12 +76,12 @@ public class EngineNative implements Engine{
         player.setOnSeekCompleteListener(MediaPlayer::start);
         player.setOnCompletionListener(mp -> {
             if(onPlayListener != null){
-                onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_COMPLETED);
+                onPlayListener.onPlayerStatusChanged(EnumPlayStatus.COMPLETED);
             }
         });
         player.setOnErrorListener((mp, what, extra) -> {
             if (onPlayListener != null) {
-                onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_ERROR);
+                onPlayListener.onPlayerStatusChanged(EnumPlayStatus.ERROR);
             }
             return true;
         });
@@ -96,7 +97,7 @@ public class EngineNative implements Engine{
         if(player == null || TextUtils.isEmpty(url)) return;
         Log.d(Constant.c.TAG, "start play url: " + url);
         if(onPlayListener != null){
-            onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PREPARING);
+            onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PREPARING);
         }
         new Thread(() -> {
             try {
@@ -114,7 +115,7 @@ public class EngineNative implements Engine{
         if(player == null || TextUtils.isEmpty(url)) return;
         Log.d(Constant.c.TAG, "restart play url: " + url);
         if(onPlayListener != null){
-            onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PREPARING);
+            onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PREPARING);
         }
         new Thread(() -> {
             try {
@@ -141,7 +142,7 @@ public class EngineNative implements Engine{
         if(player != null && player.isPlaying()){
             player.pause();
             if(onPlayListener != null){
-                onPlayListener.onPlayerStatusChanged(Player.PLAY_STATE_PAUSED);
+                onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PAUSED);
             }
         }
     }
