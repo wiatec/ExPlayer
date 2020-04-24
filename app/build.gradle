@@ -9,7 +9,7 @@ android {
         minSdkVersion 22
         targetSdkVersion 29
         versionCode 100
-        versionName "v1.0.0"
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             abiFilters "armeabi-v7a"
@@ -50,9 +50,9 @@ android {
         variant.outputs.all { output ->
             def fileName = ""
             if (variant.buildType.name == 'release') {
-                fileName = applicationId + "_" + variant.versionName + "_" + variant.versionCode + "_${releaseTime()}.apk"
+                fileName = applicationId + "_v" + variant.versionName + "_" + variant.versionCode + "_${releaseTime()}.apk"
             } else if (variant.buildType.name == 'debug') {
-                fileName = applicationId + "_" + variant.versionName + "_" + variant.versionCode + "_debug.apk"
+                fileName = applicationId + "_v" + variant.versionName + "_" + variant.versionCode + "_debug.apk"
             }
             outputFileName = new File(fileName)
         }
@@ -75,6 +75,7 @@ dependencies {
 
     implementation project(path: ':libplayer')
 //    implementation 'com.ex.lib:explayer:1.0.1'
+    implementation 'com.github.wiatec:galaxy:1.0.4'
 
 
 }
