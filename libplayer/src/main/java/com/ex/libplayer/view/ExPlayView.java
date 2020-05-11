@@ -30,8 +30,6 @@ import com.ex.libplayer.util.ExUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  *
@@ -62,6 +60,9 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
     private Map<String, String> headers;
     private int playMode = Player.PLAY_MODE_NORMAL;
     private EnumPlayStatus playStatus = EnumPlayStatus.IDLE;
+    private boolean autoStartPlay;
+    private boolean loop;
+    private int jumpDuration = 20;
 
     public ExPlayView(@NonNull Context context) {
         this(context, null);
@@ -108,6 +109,9 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
         }
     }
 
+    /**
+     * 设置播放控制器
+     */
     public void setController(ExPlayerController controller) {
         this.controller = controller;
         controller.onBindPlayView(this);
@@ -118,10 +122,18 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
     }
 
     public void prepare(){
-        prepare(this.engine);
+        prepare(this.engine, true);
+    }
+
+    public void prepare(boolean autoStartPlay){
+        prepare(this.engine, autoStartPlay);
     }
 
     public void prepare(int engine){
+        prepare(engine, true);
+    }
+
+    public void prepare(int engine, boolean autoStartPlay){
         this.engine = engine;
         if(engine == Player.ENGINE_NATIVE){
             Log.d(Constant.c.TAG, "init native engine");
@@ -144,6 +156,7 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
         mEngine.setUrl(url);
         mEngine.setHeaders(headers);
         mEngine.setListener(this);
+        this.autoStartPlay = autoStartPlay;
         initTextureView();
     }
 
@@ -164,7 +177,9 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
             Log.d(Constant.c.TAG, "onSurfaceTextureAvailable");
             this.surfaceTexture = surface;
             mEngine.setDisplay(new Surface(surfaceTexture), this.textureView);
-            start();
+            if(autoStartPlay) {
+                start();
+            }
         } else {
             Log.d(Constant.c.TAG, "onSurfaceTextureAvailable1");
             textureView.setSurfaceTexture(surfaceTexture);
@@ -205,10 +220,10 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
     @Override
     public void onPlayerStatusChanged(EnumPlayStatus status) {
         Log.d(Constant.c.TAG, "onPlayerStatusChanged: " + status.getDes());
+        changePlayStatus(status);
         if(onPlayListener != null){
             onPlayListener.onPlayerStatusChanged(status);
         }
-        changePlayStatus(status);
     }
 
     @Override
@@ -218,6 +233,9 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
         }
     }
 
+    /**
+     * 开始播放
+     */
     public void start() {
         if(playStatus != EnumPlayStatus.IDLE){
             Log.d(Constant.c.TAG, "PLAY_STATE_IDLE ERROR: " + playStatus);
@@ -229,6 +247,9 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
         }
     }
 
+    /**
+     * 暂停后开始播放
+     */
     public void resume() {
         if(playStatus != EnumPlayStatus.PAUSED){
             Log.d(Constant.c.TAG, "PLAY_STATE_PAUSED ERROR: " + playStatus);
@@ -239,6 +260,9 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
         }
     }
 
+    /**
+     * 暂停播放
+     */
     public void pause() {
         if(playStatus != EnumPlayStatus.PLAYING && playStatus != EnumPlayStatus.BUFFERING){
             Log.d(Constant.c.TAG, "PLAY_STATE_PLAYING OR PLAY_STATE_BUFFERING ERROR: " + playStatus);
@@ -249,6 +273,9 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
         }
     }
 
+    /**
+     * 重新开始播放
+     */
     public void restart() {
         if(mEngine != null){
             lastPlayPosition = 0;
@@ -258,20 +285,29 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
         }
     }
 
+    /**
+     * 快进
+     */
     public void forward(){
         if(mEngine != null){
             lastPlayPosition = 0f;
-            mEngine.forward(15 * 1000);
+            mEngine.forward(jumpDuration * 1000);
         }
     }
 
+    /**
+     * 快退
+     */
     public void rewind(){
         if(mEngine != null){
             lastPlayPosition = 0f;
-            mEngine.rewind(15 * 1000);
+            mEngine.rewind(jumpDuration * 1000);
         }
     }
 
+    /**
+     * 释放播放器资源
+     */
     public void release(){
         if(mEngine != null) {
             lastPlayPosition = 0;
@@ -281,6 +317,9 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
         }
     }
 
+    /**
+     * 切换播放引擎
+     */
     public void changeEngine(int engine){
         if(onPlayListener != null){
             onPlayListener.onPlayerEngineChanged(engine);
@@ -337,6 +376,9 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
             }
         }else if(playStatus == EnumPlayStatus.COMPLETED){
             lastPlayPosition = 0;
+            if(loop){
+                restart();
+            }
         }else if(playStatus == EnumPlayStatus.ERROR){
             lastPlayPosition = 0;
         }
@@ -349,20 +391,45 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
         }
     }
 
-
+    /**
+     * 设置播放状态监听
+     */
     public void setOnPlayListener(OnPlayListener onPlayListener) {
         this.onPlayListener = onPlayListener;
     }
 
+    /**
+     * 获取视频标题
+     */
     public String getTitle() {
         return title;
     }
 
+    /**
+     * 获取当前播放长度
+     */
     public float getCurrentDuration(){
         return mEngine.getCurrentDuration();
     }
 
+    /**
+     * 获取视频总长度
+     */
     public float getTotalDuration(){
         return mEngine.getTotalDuration();
+    }
+
+    /**
+     * 设置播放结束后是否循环播放，默认关闭
+     */
+    public void setLoop(boolean loop) {
+        this.loop = loop;
+    }
+
+    /**
+     * 设置快进或快退时的移动间隔，默认20秒
+     */
+    public void setJumpDuration(int jumpDuration) {
+        this.jumpDuration = jumpDuration;
     }
 }

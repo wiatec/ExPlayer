@@ -4,10 +4,8 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Handler;
-import android.os.Message;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -23,7 +21,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.ex.libplayer.Constant;
 import com.ex.libplayer.R;
 import com.ex.libplayer.entities.ExPlayInfo;
 import com.ex.libplayer.enu.EnumPlayStatus;
@@ -39,6 +36,7 @@ public class ExPlayerController extends FrameLayout implements Controller {
     private static final String INIT_TIME = "00:00:00";
     private static final String COLOR_PRIMARY = "#FF2196F3";
     private static final String COLOR_ACCENT = "#FFB1D3F7";
+    private static final int HIDE_DELAY = 15;
 
     private static final int MSG_UPDATE_PLAY_MODE = 1;
     private static final int MSG_UPDATE_PLAY_STATUS = 2;
@@ -85,6 +83,7 @@ public class ExPlayerController extends FrameLayout implements Controller {
     private Button btEngineVlc;
 
     private Timer timerAutoHideControlView;
+    private int hiddenDelayTime = HIDE_DELAY;
     private Timer progressTimer;
     private Handler handler = new Handler(msg -> {
         switch (msg.what){
@@ -489,6 +488,7 @@ public class ExPlayerController extends FrameLayout implements Controller {
     private void onPlayStatusUpdated(){
         if(playStatus == EnumPlayStatus.IDLE ||
                 playStatus == EnumPlayStatus.PREPARING){
+            tvTitle.setText(playView.getTitle());
             tvCurrentTime.setText(INIT_TIME);
             tvTotalTime.setText(INIT_TIME);
             progressBar.setProgress(0);
@@ -552,6 +552,9 @@ public class ExPlayerController extends FrameLayout implements Controller {
         }
     }
 
+    /**
+     * 全屏切换
+     */
     private void fullScreenOrExit(){
         if(playMode == Player.PLAY_MODE_NORMAL){
             playView.enterFullScreen();
@@ -567,26 +570,27 @@ public class ExPlayerController extends FrameLayout implements Controller {
         moreView.setVisibility(visible? VISIBLE: GONE);
     }
 
-    private void setControlViewVisibility(boolean visible){
+    /**
+     * 设置播放控制器的可见性
+     */
+    public void setControlViewVisibility(boolean visible){
         topView.setVisibility(visible? VISIBLE: View.GONE);
         bottomView.setVisibility(visible? VISIBLE: View.GONE);
         startAutoHideTimer();
     }
 
+    /**
+     * 设置loading view的可见性
+     */
     private void setLoadingViewVisibility(boolean visible){
         loadingView.setVisibility(visible? VISIBLE: GONE);
         pbLoading.setVisibility(visible? VISIBLE: GONE);
         tvStatus.setText("loading ...");
     }
 
-    public void setBtnFullScreenVisibility(boolean visible){
-        ibtFullScreen.setVisibility(visible? VISIBLE: GONE);
-    }
-
-    public void setBtnMoreVisibility(boolean visibility){
-        ibtMore.setVisibility(visibility? VISIBLE: GONE);
-    }
-
+    /**
+     * 开启控制界面自动隐藏定时器
+     */
     private void startAutoHideTimer(){
         if(timerAutoHideControlView != null){
             timerAutoHideControlView.cancel();
@@ -598,9 +602,12 @@ public class ExPlayerController extends FrameLayout implements Controller {
             public void run() {
                 handler.sendEmptyMessage(MSG_HIDE_CONTROL_VIEW);
             }
-        }, 1000 * 15);
+        }, 1000 * hiddenDelayTime);
     }
 
+    /**
+     * 取消控制界面自动隐藏定时器
+     */
     private void cancelAutoHideTimer(){
         if(timerAutoHideControlView != null){
             timerAutoHideControlView.cancel();
@@ -608,6 +615,9 @@ public class ExPlayerController extends FrameLayout implements Controller {
         }
     }
 
+    /**
+     * 开始播放进度更新定时器
+     */
     private void startProgressTimer() {
         if(progressTimer != null){
             progressTimer.cancel();
@@ -622,11 +632,43 @@ public class ExPlayerController extends FrameLayout implements Controller {
         }, 10L, 500L);
     }
 
-    public void cancelProgressTimer(){
+    /**
+     * 取消播放进度更新定时器
+     */
+    private void cancelProgressTimer(){
         if(progressTimer != null){
             progressTimer.cancel();
             progressTimer = null;
         }
     }
 
+    /**
+     * 设置全屏按钮的显示和隐藏
+     */
+    public void setBtnFullScreenVisibility(boolean visible){
+        ibtFullScreen.setVisibility(visible? VISIBLE: GONE);
+    }
+
+    /**
+     * 设置more按钮的显示和隐藏
+     */
+    public void setBtnMoreVisibility(boolean visibility){
+        ibtMore.setVisibility(visibility? VISIBLE: GONE);
+    }
+
+    /**
+     * 设置自动隐藏controller view界面的延迟时间， 默认15秒
+     */
+    public void setHiddenDelayTime(int hiddenDelayTime) {
+        this.hiddenDelayTime = hiddenDelayTime;
+    }
+
+    /**
+     * 设置中间显示的播放状态提示文字
+     */
+    public void setTipText(String text){
+        if(!TextUtils.isEmpty(text)) {
+            tvStatus.setText(text);
+        }
+    }
 }

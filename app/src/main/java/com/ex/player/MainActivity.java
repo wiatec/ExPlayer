@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.widget.Button;
 
 import com.ex.libplayer.controller.ExPlayerController;
+import com.ex.libplayer.enu.EnumPlayStatus;
+import com.ex.libplayer.listener.OnPlayListener;
 import com.ex.libplayer.player.Player;
 import com.ex.libplayer.view.ExPlayView;
 
@@ -37,10 +39,26 @@ public class MainActivity extends AppCompatActivity {
         exPlayView = findViewById(R.id.ex_play_view);
         exPlayView.setDataSource(URL, "JW");
         ExPlayerController  controller = new ExPlayerController(this);
-        controller.setBtnFullScreenVisibility(true);
+        controller.setBtnFullScreenVisibility(false);
         controller.setBtnMoreVisibility(false);
         exPlayView.setController(controller);
-        exPlayView.prepare(Player.ENGINE_IJK);
+        exPlayView.prepare(Player.ENGINE_VLC);
+        exPlayView.setOnPlayListener(new OnPlayListener() {
+            @Override
+            public void onPlayerSizeChanged(int videoWidth, int videoHeight) {
+
+            }
+
+            @Override
+            public void onPlayerEngineChanged(int mode) {
+
+            }
+
+            @Override
+            public void onPlayerStatusChanged(EnumPlayStatus status) {
+
+            }
+        });
     }
 
 }
