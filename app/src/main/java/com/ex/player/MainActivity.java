@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
         controller.setBtnFullScreenVisibility(false);
         controller.setBtnMoreVisibility(false);
         exPlayView.setController(controller);
-        exPlayView.prepare(Player.ENGINE_VLC);
+        exPlayView.prepare(Player.ENGINE_EXO);
         exPlayView.setOnPlayListener(new OnPlayListener() {
             @Override
             public void onPlayerSizeChanged(int videoWidth, int videoHeight) {
@@ -61,4 +61,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        exPlayView.resume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        exPlayView.pause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        exPlayView.release();
+    }
 }

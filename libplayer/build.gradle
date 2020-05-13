@@ -51,7 +51,7 @@ publish {
     userOrg = 'patrickxu'
     groupId = 'com.ex.lib'
     artifactId = 'explayer'
-    publishVersion = '1.0.3'
+    publishVersion = '1.0.4'
     desc = 'play component for android'
     website = 'https://github.com/wiatec/ExPlayer'
 }

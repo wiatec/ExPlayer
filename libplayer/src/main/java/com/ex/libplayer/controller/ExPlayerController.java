@@ -211,6 +211,7 @@ public class ExPlayerController extends FrameLayout implements Controller {
         bottomView = new LinearLayout(context);
         bottomView.setBackgroundResource(R.color.lpColorT5);
         bottomView.setGravity(Gravity.CENTER_VERTICAL);
+        bottomView.setPadding(padding, 0, padding, 0);
         LayoutParams params = new LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
