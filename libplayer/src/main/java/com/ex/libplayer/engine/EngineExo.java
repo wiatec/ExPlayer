@@ -120,7 +120,9 @@ public class EngineExo implements Engine{
             DefaultHttpDataSourceFactory dataSourceFactory = new
                     DefaultHttpDataSourceFactory(Constant.header.USER_AGENT, null, 60000, 60000, true);
             dataSourceFactory.getDefaultRequestProperties().set(headers);
-            MediaSource videoSource = url.split("\\?")[0].endsWith("m3u8") || url.split("\\?")[0].endsWith("pls")?
+            MediaSource videoSource = url.split("\\?")[0].endsWith("m3u8")
+                    || url.split("\\?")[0].endsWith("pls")
+                    || url.split("\\?")[0].endsWith("ts")?
                     new HlsMediaSource.Factory(dataSourceFactory)
                             .createMediaSource(Uri.parse(url)) :
                     new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(url));
