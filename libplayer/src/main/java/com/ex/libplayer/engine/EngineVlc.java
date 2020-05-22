@@ -28,7 +28,7 @@ public class EngineVlc implements Engine, MediaPlayer.EventListener {
     private Map<String, String> headers;
 
     @Override
-    public void init(Context context) {
+    public void init(Context context, boolean isLive) {
         headers = new HashMap<>();
         headers.put("User-Agent", Constant.header.USER_AGENT);
         libVLC = new LibVLC(context);

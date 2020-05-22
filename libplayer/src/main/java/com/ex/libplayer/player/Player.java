@@ -23,7 +23,7 @@ public interface Player {
     // 悬浮窗播放模式
     int PLAY_MODE_TINY_WINDOW = 2;
 
-    void init(Context context, int engine);
+    void init(Context context, int engine, boolean isLive);
     void setUrl(String url);
     void setListener(OnPlayListener onPlayListener);
     void setDisplay(Surface surface, TextureView textureView);

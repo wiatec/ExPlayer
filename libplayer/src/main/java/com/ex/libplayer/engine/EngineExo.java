@@ -11,6 +11,7 @@ import com.ex.libplayer.Constant;
 import com.ex.libplayer.enu.EnumPlayStatus;
 import com.ex.libplayer.listener.OnPlayListener;
 import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -26,15 +27,19 @@ import java.util.Map;
 public class EngineExo implements Engine{
 
     private Context context;
+    private boolean isLive;
     private SimpleExoPlayer player;
     private String url;
     private OnPlayListener onPlayListener;
     private Map<String, String> headers;
     private boolean isPlaying = false;
+    private Player.EventListener eventListener;
+    private Surface surface;
 
     @Override
-    public void init(Context context) {
+    public void init(Context context, boolean isLive) {
         this.context = context;
+        this.isLive = isLive;
         headers = new HashMap<>();
         headers.put("User-Agent", Constant.header.USER_AGENT);
         player = ExoPlayerFactory.newSimpleInstance(context);
@@ -48,30 +53,31 @@ public class EngineExo implements Engine{
 
     @Override
     public void setDisplay(Surface surface, TextureView textureView) {
+        this.surface = surface;
         player.setVideoSurface(surface);
     }
 
     @Override
     public void setListener(OnPlayListener onPlayListener) {
         this.onPlayListener = onPlayListener;
-        player.addListener(new Player.EventListener() {
+        eventListener = new Player.EventListener() {
             @Override
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-                if(playbackState == com.google.android.exoplayer2.ExoPlayer.STATE_IDLE){
+                if (playbackState == ExoPlayer.STATE_IDLE) {
                     isPlaying = false;
-                }else if(playbackState == com.google.android.exoplayer2.ExoPlayer.STATE_BUFFERING){
+                } else if (playbackState == ExoPlayer.STATE_BUFFERING) {
                     isPlaying = false;
-                    if(onPlayListener != null){
+                    if (onPlayListener != null) {
                         onPlayListener.onPlayerStatusChanged(EnumPlayStatus.BUFFERING);
                     }
-                }else if(playbackState == com.google.android.exoplayer2.ExoPlayer.STATE_READY){
+                } else if (playbackState == ExoPlayer.STATE_READY) {
                     isPlaying = playWhenReady;
-                    if(onPlayListener != null && playWhenReady){
+                    if (onPlayListener != null && playWhenReady) {
                         onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PLAYING);
                     }
-                }else if(playbackState == com.google.android.exoplayer2.ExoPlayer.STATE_ENDED){
+                } else if (playbackState == ExoPlayer.STATE_ENDED) {
                     isPlaying = false;
-                    if(onPlayListener != null){
+                    if (onPlayListener != null) {
                         onPlayListener.onPlayerStatusChanged(EnumPlayStatus.COMPLETED);
                     }
                 }
@@ -80,11 +86,12 @@ public class EngineExo implements Engine{
             @Override
             public void onPlayerError(ExoPlaybackException error) {
                 isPlaying = false;
-                if(onPlayListener != null){
+                if (onPlayListener != null) {
                     onPlayListener.onPlayerStatusChanged(EnumPlayStatus.ERROR);
                 }
             }
-        });
+        };
+        player.addListener(eventListener);
         player.addVideoListener(new VideoListener() {
             @Override
             public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
@@ -103,6 +110,8 @@ public class EngineExo implements Engine{
         });
     }
 
+
+
     @Override
     public void setHeaders(Map<String, String> headers) {
         this.headers.putAll(headers);
@@ -116,18 +125,7 @@ public class EngineExo implements Engine{
             onPlayListener.onPlayerStatusChanged(EnumPlayStatus.PREPARING);
         }
         try {
-            player.stop(true);
-            DefaultHttpDataSourceFactory dataSourceFactory = new
-                    DefaultHttpDataSourceFactory(Constant.header.USER_AGENT, null, 60000, 60000, true);
-            dataSourceFactory.getDefaultRequestProperties().set(headers);
-            MediaSource videoSource = url.split("\\?")[0].endsWith("m3u8")
-                    || url.split("\\?")[0].endsWith("pls")
-                    || url.split("\\?")[0].endsWith("ts")?
-                    new HlsMediaSource.Factory(dataSourceFactory)
-                            .createMediaSource(Uri.parse(url)) :
-                    new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(url));
-            player.prepare(videoSource);
-            player.setPlayWhenReady(true);
+            realPlay();
         }catch (Exception e){
             Log.e(Constant.c.TAG, e.toString());
         }
@@ -142,18 +140,30 @@ public class EngineExo implements Engine{
         }
         try {
             player.stop(true);
-            DefaultHttpDataSourceFactory dataSourceFactory = new
-                    DefaultHttpDataSourceFactory(Constant.header.USER_AGENT, null, 60000, 60000, true);
-            dataSourceFactory.getDefaultRequestProperties().set(headers);
-            MediaSource videoSource = url.split("\\?")[0].endsWith("m3u8") || url.split("\\?")[0].endsWith("pls")?
-                    new HlsMediaSource.Factory(dataSourceFactory)
-                            .createMediaSource(Uri.parse(url)) :
-                    new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(url));
-            player.prepare(videoSource);
-            player.setPlayWhenReady(true);
+            player.clearVideoSurface();
+            player.setVideoSurface(surface);
+            realPlay();
         }catch (Exception e){
             Log.e(Constant.c.TAG, e.toString());
         }
+    }
+
+    public void realPlay(){
+        DefaultHttpDataSourceFactory dataSourceFactory = new
+                DefaultHttpDataSourceFactory(Constant.header.USER_AGENT, null, 60000, 60000, true);
+        dataSourceFactory.getDefaultRequestProperties().set(headers);
+        MediaSource videoSource;
+        if(isLive){
+            videoSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(url));
+        }else {
+            videoSource = url.split("\\?")[0].endsWith("m3u8")
+                    || url.split("\\?")[0].endsWith("pls")
+                    || url.split("\\?")[0].endsWith("ts") ?
+                    new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(url)) :
+                    new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(url));
+        }
+        player.prepare(videoSource);
+        player.setPlayWhenReady(true);
     }
 
     @Override
@@ -184,6 +194,9 @@ public class EngineExo implements Engine{
     public void release() {
         if(player != null){
             player.stop();
+            if(eventListener != null) {
+                player.removeListener(eventListener);
+            }
             player.release();
             player = null;
         }

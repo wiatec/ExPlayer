@@ -28,7 +28,7 @@ public class EngineNative implements Engine{
     private Map<String, String> headers;
 
     @Override
-    public void init(Context context) {
+    public void init(Context context, boolean isLive) {
         this.context = context;
         headers = new HashMap<>();
         headers.put("User-Agent", Constant.header.USER_AGENT);
