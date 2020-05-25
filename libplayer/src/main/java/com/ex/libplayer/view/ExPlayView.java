@@ -57,7 +57,6 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
 
     private String url;
     private String title;
-    private boolean isLive;
     private Map<String, String> headers;
     private int playMode = Player.PLAY_MODE_NORMAL;
     private EnumPlayStatus playStatus = EnumPlayStatus.IDLE;
@@ -90,22 +89,21 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
         this.addView(this.container, params);
     }
 
-    public void setDataSource(String url, boolean isLive) {
-        setDataSource(url, null, isLive, null);
+    public void setDataSource(String url) {
+        setDataSource(url, null, null);
     }
 
-    public void setDataSource(String url, String title, boolean isLive) {
-        setDataSource(url, title, isLive, null);
+    public void setDataSource(String url, String title) {
+        setDataSource(url, title, null);
     }
 
-    public void setDataSource(String url, boolean isLive, Map<String, String> headers) {
-        setDataSource(url, null, isLive, headers);
+    public void setDataSource(String url, Map<String, String> headers) {
+        setDataSource(url, null, headers);
     }
 
-    public void setDataSource(String url, String title, boolean isLive, Map<String, String> headers) {
+    public void setDataSource(String url, String title, Map<String, String> headers) {
         this.url = url;
         this.title = title;
-        this.isLive = isLive;
         if(headers != null && headers.size() > 0) {
             this.headers.putAll(headers);
         }
@@ -140,19 +138,19 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
         if(engine == Player.ENGINE_NATIVE){
             Log.d(Constant.c.TAG, "init native engine");
             mEngine = new EngineNative();
-            mEngine.init(context, isLive);
+            mEngine.init(context);
         }else if(engine == Player.ENGINE_VLC){
             Log.d(Constant.c.TAG, "init vlc engine");
             mEngine = new EngineVlc();
-            mEngine.init(context, isLive);
+            mEngine.init(context);
         }else if(engine == Player.ENGINE_IJK){
             Log.d(Constant.c.TAG, "init ijk engine");
             mEngine = new EngineIjk();
-            mEngine.init(context, isLive);
+            mEngine.init(context);
         }else if(engine == Player.ENGINE_EXO){
             Log.d(Constant.c.TAG, "init exo engine");
             mEngine = new EngineExo();
-            mEngine.init(context, isLive);
+            mEngine.init(context);
         }
         playStatus = EnumPlayStatus.IDLE;
         mEngine.setUrl(url);

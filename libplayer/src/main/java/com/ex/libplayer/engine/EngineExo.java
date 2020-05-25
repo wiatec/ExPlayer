@@ -27,7 +27,6 @@ import java.util.Map;
 public class EngineExo implements Engine{
 
     private Context context;
-    private boolean isLive;
     private SimpleExoPlayer player;
     private String url;
     private OnPlayListener onPlayListener;
@@ -37,9 +36,8 @@ public class EngineExo implements Engine{
     private Surface surface;
 
     @Override
-    public void init(Context context, boolean isLive) {
+    public void init(Context context) {
         this.context = context;
-        this.isLive = isLive;
         headers = new HashMap<>();
         headers.put("User-Agent", Constant.header.USER_AGENT);
         player = ExoPlayerFactory.newSimpleInstance(context);
@@ -152,16 +150,10 @@ public class EngineExo implements Engine{
         DefaultHttpDataSourceFactory dataSourceFactory = new
                 DefaultHttpDataSourceFactory(Constant.header.USER_AGENT, null, 60000, 60000, true);
         dataSourceFactory.getDefaultRequestProperties().set(headers);
-        MediaSource videoSource;
-        if(isLive){
-            videoSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(url));
-        }else {
-            videoSource = url.split("\\?")[0].endsWith("m3u8")
-                    || url.split("\\?")[0].endsWith("pls")
-                    || url.split("\\?")[0].endsWith("ts") ?
-                    new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(url)) :
-                    new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(url));
-        }
+        MediaSource videoSource = url.split("\\?")[0].endsWith("m3u8")
+                || url.split("\\?")[0].endsWith("pls")?
+                new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(url)) :
+                new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(url));
         player.prepare(videoSource);
         player.setPlayWhenReady(true);
     }

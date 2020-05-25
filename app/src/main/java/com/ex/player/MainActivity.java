@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
         Button btNext = findViewById(R.id.bt_next);
         btNext.setOnClickListener(v -> {
             if(exPlayView != null) {
-                exPlayView.setDataSource(URL, "JW1", false);
+                exPlayView.setDataSource(URL, "JW1");
                 exPlayView.restart();
             }
         });
@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initPlayView(){
         exPlayView = findViewById(R.id.ex_play_view);
-        exPlayView.setDataSource(URL, "JW", false);
+        exPlayView.setDataSource(URL, "JW");
         ExPlayerController  controller = new ExPlayerController(this);
         controller.setBtnFullScreenVisibility(false);
         controller.setBtnMoreVisibility(false);

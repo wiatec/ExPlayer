@@ -11,7 +11,7 @@ import java.util.Map;
 
 public interface Engine {
 
-    void init(Context context, boolean isLive);
+    void init(Context context);
 
     void setUrl(String url);
     void setDisplay(Surface surface, TextureView textureView);

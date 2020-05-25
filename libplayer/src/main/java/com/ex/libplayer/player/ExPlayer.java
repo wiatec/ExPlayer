@@ -21,23 +21,23 @@ public class ExPlayer implements Player {
     private Engine mEngine;
 
     @Override
-    public void init(Context context, int engine, boolean isLive) {
+    public void init(Context context, int engine) {
         if(engine == Player.ENGINE_NATIVE){
             Log.d(Constant.c.TAG, "init native engine");
             mEngine = new EngineNative();
-            mEngine.init(context, isLive);
+            mEngine.init(context);
         }else if(engine == Player.ENGINE_VLC){
             Log.d(Constant.c.TAG, "init vlc engine");
             mEngine = new EngineVlc();
-            mEngine.init(context, isLive);
+            mEngine.init(context);
         }else if(engine == Player.ENGINE_IJK){
             Log.d(Constant.c.TAG, "init ijk engine");
             mEngine = new EngineIjk();
-            mEngine.init(context, isLive);
+            mEngine.init(context);
         }else if(engine == Player.ENGINE_EXO){
             Log.d(Constant.c.TAG, "init exo engine");
             mEngine = new EngineExo();
-            mEngine.init(context, isLive);
+            mEngine.init(context);
         }
     }
 
