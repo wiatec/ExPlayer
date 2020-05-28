@@ -75,7 +75,7 @@ dependencies {
 
     implementation project(path: ':libplayer')
 //    implementation 'com.ex.lib:explayer:1.0.1'
-    implementation 'com.github.wiatec:galaxy:1.0.4'
+    implementation 'com.github.wiatec:galaxy:1.1.1'
 
 
 }

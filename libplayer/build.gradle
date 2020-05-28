@@ -39,7 +39,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation files('libs/libijk-0.8.8.jar')
-    implementation 'com.google.android.exoplayer:exoplayer:2.10.3'
+    implementation 'com.google.android.exoplayer:exoplayer:2.11.3'
 }
 
 
@@ -51,7 +51,7 @@ publish {
     userOrg = 'patrickxu'
     groupId = 'com.ex.lib'
     artifactId = 'explayer'
-    publishVersion = '1.0.9'
+    publishVersion = '1.1.0'
     desc = 'play component for android'
     website = 'https://github.com/wiatec/ExPlayer'
 }
