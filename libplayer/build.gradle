@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    buildToolsVersion "29.0.3"
 
     defaultConfig {
         minSdkVersion 22
@@ -51,7 +51,7 @@ publish {
     userOrg = 'patrickxu'
     groupId = 'com.ex.lib'
     artifactId = 'explayer'
-    publishVersion = '1.1.0'
+    publishVersion = '1.1.1'
     desc = 'play component for android'
     website = 'https://github.com/wiatec/ExPlayer'
 }

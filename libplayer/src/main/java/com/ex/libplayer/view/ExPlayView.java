@@ -274,6 +274,15 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
     }
 
     /**
+     * 跳转到指定位置播放
+     */
+    public void seekTo(int duration){
+        if(mEngine != null){
+            mEngine.seekTo(Float.parseFloat(String.valueOf(duration)));
+        }
+    }
+
+    /**
      * 重新开始播放
      */
     public void restart() {
@@ -409,14 +418,14 @@ public class ExPlayView extends FrameLayout implements TextureView.SurfaceTextur
      * 获取当前播放长度
      */
     public float getCurrentDuration(){
-        return mEngine.getCurrentDuration();
+        return mEngine != null? mEngine.getCurrentDuration(): 0F;
     }
 
     /**
      * 获取视频总长度
      */
     public float getTotalDuration(){
-        return mEngine.getTotalDuration();
+        return mEngine != null? mEngine.getTotalDuration(): 0F;
     }
 
     /**
